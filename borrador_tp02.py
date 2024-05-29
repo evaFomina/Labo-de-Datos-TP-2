@@ -12,6 +12,10 @@ import seaborn as sns
 from sklearn import tree
 from sklearn.model_selection import train_test_split, KFold
 from sklearn import metrics
+from itertools import combinations
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+import random
 #%%======== plot-letters.py  ==================================================
 data = pd.read_csv("emnist_letters_tp.csv", header= None)
 #%%
@@ -72,7 +76,7 @@ cols_datos = data.drop(0, axis = 1)
 # correspondientes a la L, o la letra E de la M?
 #%%
 # c. Tomen una de las clases, por ejemplo la letra C, ¿Son todas las
-# imágenes muy similares entre sí?
+# imágenes muy similares entre sí? hacer
 
 letras_C = data[data[0] == 'C']
 datos_C = letras_C.drop(0, axis=1)
@@ -110,11 +114,17 @@ letras_A_L = pd.concat([letras_A, letras_L])
 # b. Sobre este subconjunto de datos, analizar cuántas muestras se tienen
 # y determinar si está balanceado con respecto a las dos clases a
 # predecir (la imagen es de la letra L o de la letra A).
+
+#Los datos estan perfectamente balanceados. Hay 2400 de ejemplos de letras para cada letra
+b = letras_A_L[[0]].value_counts()
 #%%
 # c. Separar los datos en conjuntos de train y test.
 X = letras_A_L.drop(0, axis=1)
 Y = letras_A_L[0]
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1, test_size = 0.2)
+#%%
+#me aseguro de que está balanceada la separación
+print(Y_train.value_counts())
 #%%
 # d. Ajustar un modelo de KNN considerando pocos atributos, por ejemplo 
 # 3. Probar con distintos conjuntos de 3 atributos y comparar resultados.
@@ -123,6 +133,56 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1, test
 # conjunto de test generado en el punto anterior.
 # OBS: Utilicen métricas para problemas de clasificación como por
 # ejemplo, exactitud.
+
+# Para 3 atributos:
+knn = KNeighborsClassifier(n_neighbors=3)
+atributos = X_train.columns.tolist()
+combinaciones_3 = list(combinations(atributos, 3))
+num_muestras= 100
+muestras_seleccionadas = random.sample(combinaciones_3, num_muestras)
+
+mejor_exactitud = 0
+mejores_atributos = None
+
+for muestra in muestras_seleccionadas:
+    X_train_subset = X_train[list(muestra)]
+    X_test_subset = X_test[list(muestra)]
+    
+    knn.fit(X_train_subset, Y_train)
+    
+    y_pred = knn.predict(X_test_subset)
+    exactitud = accuracy_score(Y_test, y_pred)
+
+    # Verificar si esta combinación de atributos es la mejor hasta ahora
+    if exactitud > mejor_exactitud:
+        mejor_exactitud = exactitud
+        mejores_atributos = muestra
+
+print("Mejor conjunto de atributos:", mejores_atributos)
+print("Exactitud del mejor conjunto de atributos:", mejor_exactitud)
+
+#%%
+# Para 5 atributos   
+combinaciones_5 = list(combinations(atributos, 5))   
+muestras_seleccionadas_5 = random.sample(combinaciones_5, num_muestras)
+
+"""for muestra in muestras_seleccionadas_5:
+    X_train_subset = X_train[list(muestra)]
+    X_test_subset = X_test[list(muestra)]
+    
+    knn.fit(X_train_subset, Y_train)
+    
+    y_pred = knn.predict(X_test_subset)
+    exactitud = accuracy_score(Y_test, y_pred)
+
+    # Verificar si esta combinación de atributos es la mejor hasta ahora
+    if exactitud > mejor_exactitud:
+        mejor_exactitud = exactitud
+        mejores_atributos = muestra
+
+print("Mejor conjunto de atributos:", mejores_atributos)
+print("Exactitud del mejor conjunto de atributos:", mejor_exactitud)"""
+
 #%%
 # e. Comparar modelos de KNN utilizando distintos atributos y distintos
 # valores de k (vecinos). Para el análisis de los resultados, tener en
