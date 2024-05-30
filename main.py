@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue May 28 22:36:32 2024
-
-@author: marin
+Materia        : Laboratorio de datos - FCEyN - UBA
+Contenido      : Trabajo Práctico 02 
+Grupo EcuJaRu2 : Fomina, Evangelina
+                 Niikado, Marina
+                 Borja, Kurt 
+Fecha          : 1C2024
 """
+#%%===========================================================================
+# Imports
+#=============================================================================
 
 import matplotlib.pyplot as plt
 import pandas as pd
