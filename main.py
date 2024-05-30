@@ -22,8 +22,9 @@ from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 import random
+from joblib import Parallel, delayed
 #%%======== plot-letters.py  ==================================================
-data = pd.read_csv("emnist_letters_tp.csv", header= None)
+data = pd.read_csv("C:/Users/Atom Eve/Documents/LABO DE DATOS/TP2/emnist_letters_tp.csv", header= None)
 #%%
 # Elijo la fila correspondiente a la letra que quiero graficar
 n_row = 100
@@ -140,55 +141,46 @@ print(Y_train.value_counts())
 # OBS: Utilicen métricas para problemas de clasificación como por
 # ejemplo, exactitud.
 
-# Para 3 atributos:
+
+# Evaluo el modelo de knn con k = 3 para 3 atributos seleccionados al azar
+
+## Agregar top 5 mejores atributos
 knn = KNeighborsClassifier(n_neighbors=3)
 atributos = X_train.columns.tolist()
 combinaciones_3 = list(combinations(atributos, 3))
-num_muestras= 100
+num_muestras = 100
 muestras_seleccionadas = random.sample(combinaciones_3, num_muestras)
 
-mejor_exactitud = 0
-mejores_atributos = None
-
-for muestra in muestras_seleccionadas:
+def evaluar_combinacion(muestra):
     X_train_subset = X_train[list(muestra)]
     X_test_subset = X_test[list(muestra)]
-    
+ 
+# Evaluo 100 modelos con 3 atributos seleccionados con random
     knn.fit(X_train_subset, Y_train)
-    
     y_pred = knn.predict(X_test_subset)
     exactitud = accuracy_score(Y_test, y_pred)
+    
+    return exactitud, muestra
 
-    # Verificar si esta combinación de atributos es la mejor hasta ahora
-    if exactitud > mejor_exactitud:
-        mejor_exactitud = exactitud
-        mejores_atributos = muestra
+# Funciones paralel y delayed permiten ejecutar el bucle de evaluación de combinaciones en paralelo, aprovechando todos los núcleos de CPU disponibles.
+resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas)
+
+# La mejor combinación
+mejor_exactitud, mejores_atributos = max(resultados, key=lambda x: x[0])
 
 print("Mejor conjunto de atributos:", mejores_atributos)
 print("Exactitud del mejor conjunto de atributos:", mejor_exactitud)
 
 #%%
 # Para 5 atributos   
-combinaciones_5 = list(combinations(atributos, 5))   
-muestras_seleccionadas_5 = random.sample(combinaciones_5, num_muestras)
 
-"""for muestra in muestras_seleccionadas_5:
-    X_train_subset = X_train[list(muestra)]
-    X_test_subset = X_test[list(muestra)]
-    
-    knn.fit(X_train_subset, Y_train)
-    
-    y_pred = knn.predict(X_test_subset)
-    exactitud = accuracy_score(Y_test, y_pred)
+atributos_5 = X_train[[520, 576, 736, 555, 748]]
+atributos_5_test = X_test[[520, 576, 736, 555, 748]]
 
-    # Verificar si esta combinación de atributos es la mejor hasta ahora
-    if exactitud > mejor_exactitud:
-        mejor_exactitud = exactitud
-        mejores_atributos = muestra
-
-print("Mejor conjunto de atributos:", mejores_atributos)
-print("Exactitud del mejor conjunto de atributos:", mejor_exactitud)"""
-
+knn.fit(atributos_5, Y_train)
+y_pred = knn.predict(atributos_5_test)
+exactitud = accuracy_score(Y_test, y_pred)
+print("exactitud: ", exactitud)
 #%%
 # e. Comparar modelos de KNN utilizando distintos atributos y distintos
 # valores de k (vecinos). Para el análisis de los resultados, tener en
