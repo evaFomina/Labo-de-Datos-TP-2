@@ -128,7 +128,7 @@ b = letras_A_L[[0]].value_counts()
 # c. Separar los datos en conjuntos de train y test.
 X = letras_A_L.drop(0, axis=1)
 Y = letras_A_L[0]
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1, test_size = 0.2)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,stratify=Y, test_size = 0.2)
 #%%
 #me aseguro de que está balanceada la separación
 print(Y_train.value_counts())
@@ -144,7 +144,6 @@ print(Y_train.value_counts())
 
 # Evaluo el modelo de knn con k = 3 para 3 atributos seleccionados al azar
 
-## Agregar top 5 mejores atributos
 knn = KNeighborsClassifier(n_neighbors=3)
 atributos = X_train.columns.tolist()
 combinaciones_3 = list(combinations(atributos, 3))
@@ -165,28 +164,87 @@ def evaluar_combinacion(muestra):
 # Funciones paralel y delayed permiten ejecutar el bucle de evaluación de combinaciones en paralelo, aprovechando todos los núcleos de CPU disponibles.
 resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas)
 
-# La mejor combinación
-mejor_exactitud, mejores_atributos = max(resultados, key=lambda x: x[0])
 
-print("Mejor conjunto de atributos:", mejores_atributos)
-print("Exactitud del mejor conjunto de atributos:", mejor_exactitud)
+# Las mejores combinaciones
+resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
+mejores_5 = resultados_ordenados[:5]
+
+# Imprimo los 5 mejores conjuntos de atributos y sus exactitudes
+for i, (exactitud, atributos) in enumerate(mejores_5, 1):
+    print(f"Conjunto de atributos #{i}: {atributos}")
+    print(f"Exactitud: {exactitud}")
 
 #%%
 # Para 5 atributos   
 
-atributos_5 = X_train[[520, 576, 736, 555, 748]]
-atributos_5_test = X_test[[520, 576, 736, 555, 748]]
+# Selecciono atributos mencionados en el raking del punto anterior
+atributos_5 = X_train[[465, 547, 736, 548, 694]]
+atributos_5_test = X_test[[465, 547, 736, 548, 694]]
 
 knn.fit(atributos_5, Y_train)
 y_pred = knn.predict(atributos_5_test)
 exactitud = accuracy_score(Y_test, y_pred)
 print("exactitud: ", exactitud)
+
+# Mejora el accuracy
+#%%
+# Para 10 atributos
+atributos_10 = X_train[[465, 547, 736, 548, 694, 765, 72, 518, 546, 493]]
+atributos_10_test = X_test[[465, 547, 736, 548, 694, 765, 72, 518, 546, 493]]
+
+knn.fit(atributos_10, Y_train)
+y_pred = knn.predict(atributos_10_test)
+exactitud = accuracy_score(Y_test, y_pred)
+print("exactitud: ", exactitud)
+
+# Con mas atributos mejora el accuracy
 #%%
 # e. Comparar modelos de KNN utilizando distintos atributos y distintos
 # valores de k (vecinos). Para el análisis de los resultados, tener en
 # cuenta las medidas de evaluación (por ejemplo, la exactitud) y la
 # cantidad de atributos.
 
+# Voy a usar de a 3 atributos porque en la funcion que se hizo en el punto d ya obtuve una lista de atributos.
+valores_k = [3, 5, 7, 9, 12]
+
+# Defino la función para evaluar una combinación de atributos con un valor de k
+def evaluar_combinacion_k(combinacion, k):
+    atributos = list(combinacion)
+    X_train_subset = X_train[atributos]
+    X_test_subset = X_test[atributos]
+    
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train_subset, Y_train)
+    y_pred = knn.predict(X_test_subset)
+    exactitud = accuracy_score(Y_test, y_pred)
+    
+    return exactitud, combinacion, k
+
+# Evaluo las mejores combinaciones con diferentes valores de k
+resultados = Parallel(n_jobs=-1)(
+    delayed(evaluar_combinacion_k)(combinacion, k)
+    for _, combinacion in mejores_5
+    for k in valores_k
+)
+
+# Ordeno resultados por exactitud en orden descendente y obtengo las 10 mejores combinaciones
+resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
+
+# Imprimo los resultados para cada valor de k
+resultados_por_k = {k: [] for k in valores_k}
+for exactitud, combinacion, k in resultados_ordenados:
+    resultados_por_k[k].append((exactitud, combinacion))
+
+for k in valores_k:
+    print(f"\nResultados para k={k}:")
+    for i, (exactitud, combinacion) in enumerate(resultados_por_k[k], 1):
+        print(f"Combinación #{i}: {combinacion}")
+        print(f"Exactitud: {exactitud}")
+############
+#El mejor resultado de 3 atributos me dio:
+# Con  k=9:
+# Combinación #1: (254, 547, 651)
+# Exactitud: 0.9604166666666667
 #%% ===========================================================================
 # 3. (Clasificación multiclase) Dada una imagen se desea responder la
 # siguiente pregunta: ¿A cuál de las vocales corresponde la imagen?
