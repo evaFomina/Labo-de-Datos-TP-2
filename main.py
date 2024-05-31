@@ -17,14 +17,18 @@ import numpy as np
 import seaborn as sns
 from sklearn import tree
 from sklearn.model_selection import train_test_split, KFold
-from sklearn import metrics
 from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import (confusion_matrix, 
+                             accuracy_score, 
+                             precision_score, 
+                             recall_score, 
+                             f1_score)
 import random
 from joblib import Parallel, delayed
 #%%======== plot-letters.py  ==================================================
-data = pd.read_csv("C:/Users/Atom Eve/Documents/LABO DE DATOS/TP2/emnist_letters_tp.csv", header= None)
+path = ""
+data = pd.read_csv(path + "emnist_letters_tp.csv", header= None)
 #%%
 # Elijo la fila correspondiente a la letra que quiero graficar
 n_row = 100
@@ -260,46 +264,92 @@ vocales = data[(data[0] == 'A') |
 
 X = vocales.drop(0, axis=1)
 Y = vocales[0]
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1, test_size = 0.2)
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, 
+    Y, 
+    random_state = 1,
+    stratify= Y, 
+    test_size = 0.2)
+
 #%%
 # b. Ajustar un modelo de árbol de decisión. Analizar distintas
 # profundidades.
+alturas = range(1,22)
 
+resultados_3b = np.zeros(len(alturas))
+
+for i, hmax in enumerate(alturas):
+    modelo = tree.DecisionTreeClassifier(max_depth = hmax)
+    modelo.fit(X_train, Y_train)
+
+    resultados_3b[i] = modelo.score(X_train, Y_train)
+    
+#%% Performance vs profundidad del modelo de árbol de decisión
+plt.figure(figsize=(12, 6))
+plt.plot(alturas, resultados_3b, label='Train', marker='o')
+plt.xlabel('Profundidad del árbol')
+plt.ylabel('Performance del modelo')
+plt.legend()
+plt.grid(True)
+plt.show()    
 
 #%%
 # c. Para comparar y seleccionar los árboles de decisión, utilizar validación
 # cruzada con k-folding.
 # Importante: Para hacer k-folding utilizar los datos del conjunto de
 # train.
-
-alturas = [1,2,3,5,10]
+alturas = [5,6,7,8,9,10,11,12,15,18]      
 nsplits = 10
 kf = KFold(n_splits=nsplits)
 
-
-resultados_test = np.zeros((nsplits, len(alturas)))
-resultados_train = np.zeros((nsplits, len(alturas)))
+resultados_test_3c = np.zeros((nsplits, len(alturas)))
+resultados_train_3c = np.zeros((nsplits, len(alturas)))
 
 for i, (train_index, test_index) in enumerate(kf.split(X_train)):
 
     kf_X_train, kf_X_test = X_train.iloc[train_index], X_train.iloc[test_index]
     kf_Y_train, kf_Y_test = Y_train.iloc[train_index], Y_train.iloc[test_index]
     
-    for j, hmax in enumerate(alturas):
+    for j, h in enumerate(alturas):
         
-        arbol = tree.DecisionTreeClassifier(max_depth = hmax)
-        arbol.fit(kf_X_train, kf_Y_train)
+        modelo = tree.DecisionTreeClassifier(max_depth=h)
+        modelo.fit(kf_X_train, kf_Y_train)
         
-        Y_pred = arbol.predict(kf_X_test)
-        Y_pred_train =arbol.predict(kf_X_train)
-        
-        resultados_test[i, j] = metrics.accuracy_score(kf_Y_test, Y_pred)
-        resultados_train[i, j] = metrics.accuracy_score(kf_Y_train, Y_pred_train)
-        
+        resultados_test_3c[i,j] = modelo.score(kf_X_test, kf_Y_test)
+        resultados_train_3c[i,j] = modelo.score(kf_X_train, kf_Y_train)
+
+scores_promedio_test_3c = resultados_test_3c.mean(axis = 0)
+scores_promedio_train_3c = resultados_train_3c.mean(axis = 0)
+
+#%% Performance vs profundidad del modelo de árbol de decisión
+plt.figure(figsize=(12, 6))
+plt.plot(alturas, scores_promedio_test_3c, label='Test', marker='o')
+plt.plot(alturas, scores_promedio_train_3c, label='Train', marker='o')
+plt.xlabel('Profundidad del árbol')
+plt.ylabel('Performance del modelo')
+plt.legend()
+plt.grid(True)
+plt.show()    
+
 #%%
 # d. ¿Cuál fue el mejor modelo? Evaluar cada uno de los modelos
 # utilizando el conjunto de test. Reportar su mejor modelo en el informe.
 # OBS: Al realizar la evaluación utilizar métricas de clasificación
 # multiclase. Además pueden realizar una matriz de confusión y evaluar
 # los distintos tipos de errores para las clases.
-#%% ===========================================================================
+
+# Mejor modelo: max_depth = 9
+modelo = tree.DecisionTreeClassifier(max_depth=9)
+modelo.fit(X_train, Y_train)
+
+Y_pred_3d = modelo.predict(X_test)
+#%% Matriz de confusión 
+matriz_confusion_3d = confusion_matrix(Y_test, Y_pred_3d)
+#%% Accuracy 
+accuracy_3d = accuracy_score(Y_test, Y_pred_3d)
+#%%  Precision 
+precision_3d = precision_score(Y_test, Y_pred_3d, average='micro')
+#%% Recall 
+recall_3d = recall_score(Y_test, Y_pred_3d, average='micro')
+#%% F1 
+f1_3d = f1_score(Y_test, Y_pred_3d, average='micro')
