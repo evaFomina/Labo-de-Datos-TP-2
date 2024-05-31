@@ -111,8 +111,8 @@ for i in range(10):
 # Importante: las respuestas correspondientes a los puntos 1.a, 1.b y
 # 1.c deben ser justificadas en base a gráficos de distinto tipo.
 #%% ===========================================================================
-# 2. Dada una imagen se desea responder la siguiente pregunta: ¿la imagen
-# corresponde a la letra L o a la letra A?
+# 2.(Clasificación binaria) Dada una imagen se desea responder la siguiente
+# pregunta: ¿la imagen corresponde a la letra L o a la letra A?
 #%%
 # a. A partir del dataframe original, construir un nuevo dataframe que
 # contenga sólo al subconjunto de imágenes correspondientes a las
@@ -137,11 +137,11 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,strat
 #me aseguro de que está balanceada la separación
 print(Y_train.value_counts())
 #%%
-# d. Ajustar un modelo de KNN considerando pocos atributos, por ejemplo 
-# 3. Probar con distintos conjuntos de 3 atributos y comparar resultados.
-# Analizar utilizando otras cantidades de atributos.
-# Importante: Para evaluar los resultados de cada modelo usar el
-# conjunto de test generado en el punto anterior.
+# d. Ajustar un modelo de KNN en los datos de train, considerando pocos
+# atributos, por ejemplo 3. Probar con distintos conjuntos de 3 atributos y
+# comparar resultados. Analizar utilizando otras cantidades de atributos.
+# Para comparar los resultados de cada modelo usar el conjunto de test
+# generado en el punto anterior.
 # OBS: Utilicen métricas para problemas de clasificación como por
 # ejemplo, exactitud.
 
@@ -207,6 +207,11 @@ print("exactitud: ", exactitud)
 # valores de k (vecinos). Para el análisis de los resultados, tener en
 # cuenta las medidas de evaluación (por ejemplo, la exactitud) y la
 # cantidad de atributos.
+# Observación: en este ejercicio 2 no estamos usando k-folding ni
+# estamos dejando un conjunto held-out. Solamente entrenamos en train
+# y evaluamos en test, donde train y test están fijos a lo largo de los
+# incisos c,d,e.
+
 
 # Voy a usar de a 3 atributos porque en la funcion que se hizo en el punto d ya obtuve una lista de atributos.
 valores_k = [3, 5, 7, 9, 12]
@@ -255,7 +260,10 @@ for k in valores_k:
 #%%
 # a. Vamos a trabajar con los datos correspondientes a las 5 vocales.
 # Primero filtrar solo los datos correspondientes a esas letras. Luego,
-# separar el conjunto de datos en train y test.
+# separar el conjunto de datos en desarrollo (dev) y validación (held-out).
+# Para los incisos b y c, utilizar el conjunto de datos de desarrollo. Dejar
+# apartado el conjunto held-out en estos incisos.
+
 vocales = data[(data[0] == 'A') | 
                (data[0] == 'E') | 
                (data[0] == 'I') | 
@@ -272,8 +280,9 @@ X_train, X_test, Y_train, Y_test = train_test_split(
     test_size = 0.2)
 
 #%%
-# b. Ajustar un modelo de árbol de decisión. Analizar distintas
+# b. Ajustar un modelo de árbol de decisión. Probar con distintas
 # profundidades.
+
 alturas = range(1,22)
 
 resultados_3b = np.zeros(len(alturas))
@@ -294,10 +303,12 @@ plt.grid(True)
 plt.show()    
 
 #%%
-# c. Para comparar y seleccionar los árboles de decisión, utilizar validación
-# cruzada con k-folding.
-# Importante: Para hacer k-folding utilizar los datos del conjunto de
-# train.
+# c. Realizar un experimento para comparar y seleccionar distintos árboles
+# de decisión, con distintos hiperparámetos. Para esto, utilizar validación
+# cruzada con k-folding. ¿Cuál fue el mejor modelo? Documentar cuál
+# configuración de hiperparámetros es la mejor, y qué performance
+# tiene.
+
 alturas = [5,6,7,8,9,10,11,12,15,18]      
 nsplits = 10
 kf = KFold(n_splits=nsplits)
@@ -332,11 +343,13 @@ plt.grid(True)
 plt.show()    
 
 #%%
-# d. ¿Cuál fue el mejor modelo? Evaluar cada uno de los modelos
-# utilizando el conjunto de test. Reportar su mejor modelo en el informe.
+# d. Entrenar el modelo elegido a partir del inciso previo, ahora en todo el
+# conjunto de desarrollo. Utilizarlo para predecir las clases en el conjunto
+# held-out y reportar la performance.
 # OBS: Al realizar la evaluación utilizar métricas de clasificación
-# multiclase. Además pueden realizar una matriz de confusión y evaluar
-# los distintos tipos de errores para las clases.
+# multiclase como por ejemplo la exactitud. Además pueden realizar una
+# matriz de confusión y evaluar los distintos tipos de errores para las
+# clases.
 
 # Mejor modelo: max_depth = 9
 modelo = tree.DecisionTreeClassifier(max_depth=9)
