@@ -62,32 +62,38 @@ plt.imshow(flip_rotate(image_array))
 plt.title('letra: ' + letra)
 plt.axis('off')  
 plt.show()
-#%%======== FIN  plot-letters.py  =============================================
+#========== FIN  plot-letters.py  =============================================
 
-#%% ===========================================================================
+#%%============================================================================
 # 1. Realizar un análisis exploratorio de los datos. Entre otras cosas, deben
 # analizar la cantidad de datos, cantidad y tipos de atributos, cantidad de clases
 # de la variable de interés (letras) y otras características que consideren
 # relevantes. Además se espera que con su análisis puedan responder las
 # siguientes preguntas:
-#%%
+#==============================================================================
+
 cant_filas = data.count(axis=1)
 cant_cols = data.count(axis=0)
 clases_letras = data[0].unique()
 col_letras = data[0]
 cols_datos = data.drop(0, axis = 1)
 
-#%%
+#%%------------------------------------------------------
 # a. ¿Cuáles parecen ser atributos relevantes para predecir la letra a la que
 # corresponde la imagen? ¿Cuáles no? ¿Creen que se pueden
 # descartar atributos?
-#%%
+#--------------------------------------------------------
+
+#%%------------------------------------------------------
 # b. ¿Hay letras que son parecidas entre sí? Por ejemplo, ¿Qué es más
 # fácil de diferenciar: las imágenes correspondientes a la letra E de las
 # correspondientes a la L, o la letra E de la M?
-#%%
+#--------------------------------------------------------
+
+#%%------------------------------------------------------
 # c. Tomen una de las clases, por ejemplo la letra C, ¿Son todas las
 # imágenes muy similares entre sí? hacer
+#--------------------------------------------------------
 
 letras_C = data[data[0] == 'C']
 datos_C = letras_C.drop(0, axis=1)
@@ -103,40 +109,46 @@ for i in range(10):
     plt.axis('off')  
     plt.show()
 
-#%%
+#%%------------------------------------------------------
 # d. Este dataset está compuesto por imágenes, esto plantea una
 # diferencia frente a los datos que utilizamos en las clases (por ejemplo,
 # el dataset de Titanic). ¿Creen que esto complica la exploración de los
 # datos?
-# Importante: las respuestas correspondientes a los puntos 1.a, 1.b y
-# 1.c deben ser justificadas en base a gráficos de distinto tipo.
-#%% ===========================================================================
+#--------------------------------------------------------
+
+#%%============================================================================
 # 2.(Clasificación binaria) Dada una imagen se desea responder la siguiente
 # pregunta: ¿la imagen corresponde a la letra L o a la letra A?
-#%%
+#==============================================================================
+
+#--------------------------------------------------------
 # a. A partir del dataframe original, construir un nuevo dataframe que
 # contenga sólo al subconjunto de imágenes correspondientes a las
 # letras L o A.
+#--------------------------------------------------------
 
 letras_A = data[data[0] == 'A']
 letras_L = data[data[0] == 'L']
 letras_A_L = pd.concat([letras_A, letras_L])
-#%%
+
+#%%------------------------------------------------------
 # b. Sobre este subconjunto de datos, analizar cuántas muestras se tienen
 # y determinar si está balanceado con respecto a las dos clases a
 # predecir (la imagen es de la letra L o de la letra A).
+#--------------------------------------------------------
 
 #Los datos estan perfectamente balanceados. Hay 2400 de ejemplos de letras para cada letra
 b = letras_A_L[[0]].value_counts()
-#%%
+
+#%%------------------------------------------------------
 # c. Separar los datos en conjuntos de train y test.
+#--------------------------------------------------------
+
 X = letras_A_L.drop(0, axis=1)
 Y = letras_A_L[0]
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,stratify=Y, test_size = 0.2)
-#%%
-#me aseguro de que está balanceada la separación
-print(Y_train.value_counts())
-#%%
+
+#%%------------------------------------------------------
 # d. Ajustar un modelo de KNN en los datos de train, considerando pocos
 # atributos, por ejemplo 3. Probar con distintos conjuntos de 3 atributos y
 # comparar resultados. Analizar utilizando otras cantidades de atributos.
@@ -144,7 +156,7 @@ print(Y_train.value_counts())
 # generado en el punto anterior.
 # OBS: Utilicen métricas para problemas de clasificación como por
 # ejemplo, exactitud.
-
+#--------------------------------------------------------
 
 # Evaluo el modelo de knn con k = 3 para 3 atributos seleccionados al azar
 
@@ -202,7 +214,8 @@ exactitud = accuracy_score(Y_test, y_pred)
 print("exactitud: ", exactitud)
 
 # Con mas atributos mejora el accuracy
-#%%
+
+#%%------------------------------------------------------
 # e. Comparar modelos de KNN utilizando distintos atributos y distintos
 # valores de k (vecinos). Para el análisis de los resultados, tener en
 # cuenta las medidas de evaluación (por ejemplo, la exactitud) y la
@@ -211,7 +224,7 @@ print("exactitud: ", exactitud)
 # estamos dejando un conjunto held-out. Solamente entrenamos en train
 # y evaluamos en test, donde train y test están fijos a lo largo de los
 # incisos c,d,e.
-
+#--------------------------------------------------------
 
 # Voy a usar de a 3 atributos porque en la funcion que se hizo en el punto d ya obtuve una lista de atributos.
 valores_k = [3, 5, 7, 9, 12]
@@ -254,15 +267,19 @@ for k in valores_k:
 # Con  k=9:
 # Combinación #1: (254, 547, 651)
 # Exactitud: 0.9604166666666667
-#%% ===========================================================================
+
+#%%============================================================================
 # 3. (Clasificación multiclase) Dada una imagen se desea responder la
 # siguiente pregunta: ¿A cuál de las vocales corresponde la imagen?
-#%%
+#==============================================================================
+
+#--------------------------------------------------------
 # a. Vamos a trabajar con los datos correspondientes a las 5 vocales.
 # Primero filtrar solo los datos correspondientes a esas letras. Luego,
 # separar el conjunto de datos en desarrollo (dev) y validación (held-out).
 # Para los incisos b y c, utilizar el conjunto de datos de desarrollo. Dejar
 # apartado el conjunto held-out en estos incisos.
+#--------------------------------------------------------
 
 vocales = data[(data[0] == 'A') | 
                (data[0] == 'E') | 
@@ -279,9 +296,10 @@ X_train, X_test, Y_train, Y_test = train_test_split(
     stratify= Y, 
     test_size = 0.2)
 
-#%%
+#%%------------------------------------------------------
 # b. Ajustar un modelo de árbol de decisión. Probar con distintas
 # profundidades.
+#--------------------------------------------------------
 
 alturas = range(1,22)
 
@@ -302,12 +320,13 @@ plt.legend()
 plt.grid(True)
 plt.show()    
 
-#%%
+#%%------------------------------------------------------
 # c. Realizar un experimento para comparar y seleccionar distintos árboles
 # de decisión, con distintos hiperparámetos. Para esto, utilizar validación
 # cruzada con k-folding. ¿Cuál fue el mejor modelo? Documentar cuál
 # configuración de hiperparámetros es la mejor, y qué performance
 # tiene.
+#--------------------------------------------------------
 
 alturas = [5,6,7,8,9,10,11,12,15,18]      
 nsplits = 10
@@ -342,7 +361,7 @@ plt.legend()
 plt.grid(True)
 plt.show()    
 
-#%%
+#%%------------------------------------------------------
 # d. Entrenar el modelo elegido a partir del inciso previo, ahora en todo el
 # conjunto de desarrollo. Utilizarlo para predecir las clases en el conjunto
 # held-out y reportar la performance.
@@ -350,6 +369,7 @@ plt.show()
 # multiclase como por ejemplo la exactitud. Además pueden realizar una
 # matriz de confusión y evaluar los distintos tipos de errores para las
 # clases.
+#--------------------------------------------------------
 
 # Mejor modelo: max_depth = 9
 modelo = tree.DecisionTreeClassifier(max_depth=9)
