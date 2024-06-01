@@ -143,7 +143,9 @@ plt.show()
 # pregunta: ¿la imagen corresponde a la letra L o a la letra A?
 #==============================================================================
 
-#--------------------------------------------------------
+data[data.columns[1:]] = StandardScaler().fit_transform(data[data.columns[1:]])
+
+#%%------------------------------------------------------
 # a. A partir del dataframe original, construir un nuevo dataframe que
 # contenga sólo al subconjunto de imágenes correspondientes a las
 # letras L o A.
@@ -167,7 +169,9 @@ b = letras_A_L[[0]].value_counts()
 
 X = letras_A_L.drop(0, axis=1)
 Y = letras_A_L[0]
-X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,stratify=Y, test_size = 0.2)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,
+                                                    stratify=Y, 
+                                                    test_size = 0.2)
 
 #%%------------------------------------------------------
 # d. Ajustar un modelo de KNN en los datos de train, considerando pocos
