@@ -28,7 +28,7 @@ import random
 from joblib import Parallel, delayed
 from plot_letters import flip_rotate
 
-data = pd.read_csv("emnist_letters_tp.csv")
+data = pd.read_csv("emnist_letters_tp.csv", header=None)
 
 #%%============================================================================
 # 1. Realizar un análisis exploratorio de los datos. Entre otras cosas, deben
