@@ -18,7 +18,7 @@ import numpy as np
 import seaborn as sns
 
 from sklearn import tree
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import (confusion_matrix, 
@@ -42,11 +42,12 @@ mlp.rcParams['figure.dpi'] = 200
 # siguientes preguntas:
 #==============================================================================
 
-data[data.columns[1:]] = MinMaxScaler().fit_transform(data[data.columns[1:]])
+min_max_data = data.copy()
+min_max_data[min_max_data.columns[1:]] = MinMaxScaler().fit_transform(min_max_data[min_max_data.columns[1:]])
 
-cant_filas = data.count(axis=1)
-cant_cols = data.count(axis=0)
-clases_letras = data[0].unique()
+cant_filas = min_max_data.count(axis=1)
+cant_cols = min_max_data.count(axis=0)
+clases_letras = min_max_data[0].unique()
 
 #%%------------------------------------------------------
 # a. ¿Cuáles parecen ser atributos relevantes para predecir la letra a la que
@@ -54,7 +55,7 @@ clases_letras = data[0].unique()
 # descartar atributos?
 #--------------------------------------------------------
 
-media_por_clase = data.groupby(0).mean()
+media_por_clase = min_max_data.groupby(0).mean()
 
 fig, ax = plt.subplots(6,5, figsize=(10,10))
 
@@ -115,7 +116,7 @@ plt.show()
 # imágenes muy similares entre sí?
 #--------------------------------------------------------
 
-std_C = data[data[0] == 'C'].drop(0, axis=1).std()
+std_C = min_max_data[min_max_data[0] == 'C'].drop(0, axis=1).std()
 
 fig, ax = plt.subplots()
 
@@ -130,10 +131,11 @@ plt.show()
 
 fig, ax = plt.subplots()
 
-std_por_clase = data.groupby(0).std()
+std_por_clase = min_max_data.groupby(0).std()
 media_std = std_por_clase.mean(axis=1)
 
-sns.barplot(x=media_std.index.to_numpy(), y=media_std.to_numpy())
+sns.barplot(x=media_std.index.to_numpy(), y=media_std.to_numpy(), ax=ax)
+ax.set_ylabel("Media de la desviación estandar")
 plt.show()
 
 #%%============================================================================
@@ -147,9 +149,8 @@ plt.show()
 # letras L o A.
 #--------------------------------------------------------
 
-letras_A = data[data[0] == 'A']
-letras_L = data[data[0] == 'L']
-letras_A_L = pd.concat([letras_A, letras_L])
+letras_A_L = data[(data[0] == 'A') | 
+                  (data[0] == 'L')]
 
 #%%------------------------------------------------------
 # b. Sobre este subconjunto de datos, analizar cuántas muestras se tienen
