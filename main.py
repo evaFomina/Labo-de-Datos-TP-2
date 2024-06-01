@@ -150,26 +150,28 @@ print(Y_train.value_counts())
 
 knn = KNeighborsClassifier(n_neighbors=3)
 atributos = X_train.columns.tolist()
-combinaciones_3 = list(combinations(atributos, 3))
 num_muestras = 100
-muestras_seleccionadas = random.sample(combinaciones_3, num_muestras)
 
+# Función para evaluar una combinación de atributos
 def evaluar_combinacion(muestra):
     X_train_subset = X_train[list(muestra)]
     X_test_subset = X_test[list(muestra)]
- 
-# Evaluo 100 modelos con 3 atributos seleccionados con random
+    
     knn.fit(X_train_subset, Y_train)
     y_pred = knn.predict(X_test_subset)
     exactitud = accuracy_score(Y_test, y_pred)
     
     return exactitud, muestra
 
-# Funciones paralel y delayed permiten ejecutar el bucle de evaluación de combinaciones en paralelo, aprovechando todos los núcleos de CPU disponibles.
-resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas)
+# Genero 100 muestras aleatorias de 3 atributos
+muestras_seleccionadas_3 = [random.sample(atributos, 3) for _ in range(num_muestras)]
 
+# Evaluo las combinaciones en paralelo. Funciones paralel y delayed permiten ejecutar el bucle de
+# evaluación de combinaciones en paralelo, aprovechando todos los núcleos de CPU disponibles.
+# Para eso tuve que importar Parallel, delayed de joblib
+resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_3)
 
-# Las mejores combinaciones
+# Ordeno resultados por exactitud en orden descendente y obtengo las 5 mejores combinaciones
 resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
 mejores_5 = resultados_ordenados[:5]
 
@@ -177,29 +179,41 @@ mejores_5 = resultados_ordenados[:5]
 for i, (exactitud, atributos) in enumerate(mejores_5, 1):
     print(f"Conjunto de atributos #{i}: {atributos}")
     print(f"Exactitud: {exactitud}")
-
 #%%
 # Para 5 atributos   
 
-# Selecciono atributos mencionados en el raking del punto anterior
-atributos_5 = X_train[[465, 547, 736, 548, 694]]
-atributos_5_test = X_test[[465, 547, 736, 548, 694]]
+atributos = X_train.columns.tolist()
+num_muestras = 100
 
-knn.fit(atributos_5, Y_train)
-y_pred = knn.predict(atributos_5_test)
-exactitud = accuracy_score(Y_test, y_pred)
-print("exactitud: ", exactitud)
+muestras_seleccionadas_5 = [random.sample(atributos, 5) for _ in range(num_muestras)]
 
-# Mejora el accuracy
+resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_5)
+
+
+resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
+mejores_5 = resultados_ordenados[:5]
+
+for i, (exactitud, atributos) in enumerate(mejores_5, 1):
+    print(f"Conjunto de atributos #{i}: {atributos}")
+    print(f"Exactitud: {exactitud}")
+    
+# Se puede ver que el mejor accuracy es mas alto que en el de 3 atributos.
 #%%
 # Para 10 atributos
-atributos_10 = X_train[[465, 547, 736, 548, 694, 765, 72, 518, 546, 493]]
-atributos_10_test = X_test[[465, 547, 736, 548, 694, 765, 72, 518, 546, 493]]
+atributos = X_train.columns.tolist()
+num_muestras = 100
 
-knn.fit(atributos_10, Y_train)
-y_pred = knn.predict(atributos_10_test)
-exactitud = accuracy_score(Y_test, y_pred)
-print("exactitud: ", exactitud)
+muestras_seleccionadas_10 = [random.sample(atributos, 10) for _ in range(num_muestras)]
+
+resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_10)
+
+
+resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
+mejores_5 = resultados_ordenados[:5]
+
+for i, (exactitud, atributos) in enumerate(mejores_5, 1):
+    print(f"Conjunto de atributos #{i}: {atributos}")
+    print(f"Exactitud: {exactitud}")
 
 # Con mas atributos mejora el accuracy
 #%%
@@ -213,10 +227,9 @@ print("exactitud: ", exactitud)
 # incisos c,d,e.
 
 
-# Voy a usar de a 3 atributos porque en la funcion que se hizo en el punto d ya obtuve una lista de atributos.
+# Voy a usar de a 10 atributos ya que mejora mucho el accuracy
 valores_k = [3, 5, 7, 9, 12]
 
-# Defino la función para evaluar una combinación de atributos con un valor de k
 def evaluar_combinacion_k(combinacion, k):
     atributos = list(combinacion)
     X_train_subset = X_train[atributos]
@@ -229,19 +242,19 @@ def evaluar_combinacion_k(combinacion, k):
     
     return exactitud, combinacion, k
 
-# Evaluo las mejores combinaciones con diferentes valores de k
-resultados = Parallel(n_jobs=-1)(
+# Evaluo las mejores combinaciones con diferentes valores de k en paralelo
+resultados_k = Parallel(n_jobs=-1)(
     delayed(evaluar_combinacion_k)(combinacion, k)
-    for _, combinacion in mejores_5
+    for exactitud, combinacion in mejores_5  #lo que obtuve en la funcion anterior
     for k in valores_k
 )
 
-# Ordeno resultados por exactitud en orden descendente y obtengo las 10 mejores combinaciones
-resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
+# Ordeno resultados por exactitud en orden descendente
+resultados_ordenados_k = sorted(resultados_k, key=lambda x: x[0], reverse=True)
 
 # Imprimo los resultados para cada valor de k
 resultados_por_k = {k: [] for k in valores_k}
-for exactitud, combinacion, k in resultados_ordenados:
+for exactitud, combinacion, k in resultados_ordenados_k:
     resultados_por_k[k].append((exactitud, combinacion))
 
 for k in valores_k:
@@ -249,11 +262,12 @@ for k in valores_k:
     for i, (exactitud, combinacion) in enumerate(resultados_por_k[k], 1):
         print(f"Combinación #{i}: {combinacion}")
         print(f"Exactitud: {exactitud}")
+        
 ############
-#El mejor resultado de 3 atributos me dio:
+#Como la funcion elige atributos aleatorios, pero en la última prueba el mejor resultado de 10 atributos me dio:
 # Con  k=9:
-# Combinación #1: (254, 547, 651)
-# Exactitud: 0.9604166666666667
+# Combinación #1: [649, 224, 383, 575, 602, 490, 596, 548, 564, 170]
+# Exactitud:  0.9739583333333334
 #%% ===========================================================================
 # 3. (Clasificación multiclase) Dada una imagen se desea responder la
 # siguiente pregunta: ¿A cuál de las vocales corresponde la imagen?
