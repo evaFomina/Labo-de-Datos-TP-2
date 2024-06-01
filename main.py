@@ -12,23 +12,27 @@ Fecha          : 1C2024
 #=============================================================================
 
 import matplotlib.pyplot as plt
+import matplotlib as mlp
 import pandas as pd
 import numpy as np
 import seaborn as sns
+
 from sklearn import tree
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split, KFold
-from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import (confusion_matrix, 
                              accuracy_score, 
                              precision_score, 
                              recall_score, 
                              f1_score)
+
 import random
 from joblib import Parallel, delayed
 from plot_letters import flip_rotate
 
 data = pd.read_csv("emnist_letters_tp.csv", header=None)
+mlp.rcParams['figure.dpi'] = 200
 
 #%%============================================================================
 # 1. Realizar un análisis exploratorio de los datos. Entre otras cosas, deben
@@ -38,11 +42,11 @@ data = pd.read_csv("emnist_letters_tp.csv", header=None)
 # siguientes preguntas:
 #==============================================================================
 
+data[data.columns[1:]] = MinMaxScaler().fit_transform(data[data.columns[1:]])
+
 cant_filas = data.count(axis=1)
 cant_cols = data.count(axis=0)
 clases_letras = data[0].unique()
-col_letras = data[0]
-cols_datos = data.drop(0, axis = 1)
 
 #%%------------------------------------------------------
 # a. ¿Cuáles parecen ser atributos relevantes para predecir la letra a la que
@@ -50,37 +54,87 @@ cols_datos = data.drop(0, axis = 1)
 # descartar atributos?
 #--------------------------------------------------------
 
+media_por_clase = data.groupby(0).mean()
+
+fig, ax = plt.subplots(6,5, figsize=(10,10))
+
+it = media_por_clase.iterrows()
+
+for i in range(6):
+    for j in range(5):
+        try:
+            let, vals = next(it)
+            
+            sns.heatmap(flip_rotate(vals.to_numpy()), ax=ax[i,j], vmin=0, vmax=1, cmap='mako')
+            ax[i,j].set_title(let)
+            ax[i,j].axis('off')
+        except:
+            ax[i,j].remove()
+
+plt.tight_layout(w_pad=0.8, h_pad=1.06)
+plt.show()
+
+#%%
+
+fig, ax = plt.subplots()
+
+std_entre_clase = media_por_clase.std()
+
+sns.heatmap(flip_rotate(std_entre_clase.to_numpy()), cmap='mako',ax=ax)
+ax.axis('off')
+plt.show()
+
 #%%------------------------------------------------------
 # b. ¿Hay letras que son parecidas entre sí? Por ejemplo, ¿Qué es más
 # fácil de diferenciar: las imágenes correspondientes a la letra E de las
 # correspondientes a la L, o la letra E de la M?
 #--------------------------------------------------------
 
+esp_E = media_por_clase.loc['E']
+esp_L = media_por_clase.loc['L']
+esp_M = media_por_clase.loc['M']
+
+print(f"Coeficiente de correlación para E y L: {esp_E.corr(esp_L)}")
+print(f"Coeficiente de correlación para E y M: {esp_E.corr(esp_M)}")
+
+trans_mpc = media_por_clase.transpose()
+corr_matrix = trans_mpc.corr()
+
+fig, ax = plt.subplots(figsize=(8,7))
+
+sns.heatmap(corr_matrix, ax=ax, cmap=sns.color_palette("mako_r", as_cmap=True))
+ax.xaxis.tick_top()
+ax.tick_params(axis='y', labelrotation=0)
+ax.set_xlabel("")
+ax.set_ylabel("")
+
+plt.show()
+
 #%%------------------------------------------------------
 # c. Tomen una de las clases, por ejemplo la letra C, ¿Son todas las
-# imágenes muy similares entre sí? hacer
+# imágenes muy similares entre sí?
 #--------------------------------------------------------
 
-letras_C = data[data[0] == 'C']
-datos_C = letras_C.drop(0, axis=1)
+std_C = data[data[0] == 'C'].drop(0, axis=1).std()
 
-for i in range(10):
-    row = datos_C.iloc[i]
-    letra = letras_C.iloc[i][0]
-    
-    image_array = np.array(row).astype(np.float32)
+fig, ax = plt.subplots()
 
-    plt.imshow(flip_rotate(image_array))
-    plt.title('letra: ' + letra)
-    plt.axis('off')  
-    plt.show()
+sns.heatmap(flip_rotate(std_C.to_numpy()), cmap='mako',ax=ax)
+ax.axis('off')
 
-#%%------------------------------------------------------
-# d. Este dataset está compuesto por imágenes, esto plantea una
-# diferencia frente a los datos que utilizamos en las clases (por ejemplo,
-# el dataset de Titanic). ¿Creen que esto complica la exploración de los
-# datos?
-#--------------------------------------------------------
+print(f'Media de la desviación estandar para la letra "C": {std_C.mean()}')
+
+plt.show()
+
+#%% Media de la std para todas las letras
+
+fig, ax = plt.subplots()
+
+std_por_clase = data.groupby(0).std()
+media_std = std_por_clase.mean(axis=1)
+
+sns.barplot(x=media_std.index.to_numpy(), y=media_std.to_numpy())
+plt.show()
 
 #%%============================================================================
 # 2.(Clasificación binaria) Dada una imagen se desea responder la siguiente
@@ -126,9 +180,9 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,strat
 
 # Evaluo el modelo de knn con k = 3 para 3 atributos seleccionados al azar
 
+num_muestras = 100
 knn = KNeighborsClassifier(n_neighbors=3)
 atributos = X_train.columns.tolist()
-num_muestras = 100
 
 # Función para evaluar una combinación de atributos
 def evaluar_combinacion(muestra):
@@ -157,6 +211,7 @@ mejores_5 = resultados_ordenados[:5]
 for i, (exactitud, atributos) in enumerate(mejores_5, 1):
     print(f"Conjunto de atributos #{i}: {atributos}")
     print(f"Exactitud: {exactitud}")
+    
 #%%
 # Para 5 atributos   
 
@@ -244,7 +299,8 @@ for k in valores_k:
         print(f"Exactitud: {exactitud}")
         
 ############
-#Como la funcion elige atributos aleatorios, pero en la última prueba el mejor resultado de 10 atributos me dio:
+# Como la funcion elige atributos aleatorios, pero en la última prueba el mejor 
+# resultado de 10 atributos me dio:
 # Con  k=9:
 # Combinación #1: [649, 224, 383, 575, 602, 490, 596, 548, 564, 170]
 # Exactitud:  0.9739583333333334
