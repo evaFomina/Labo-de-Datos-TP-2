@@ -342,7 +342,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(
 # profundidades.
 #--------------------------------------------------------
 
-alturas = range(1,22)
+alturas = [1,3,5,7,8,9,10,11,12,20] 
 
 resultados_3b = np.zeros(len(alturas))
 
@@ -351,6 +351,7 @@ for i, hmax in enumerate(alturas):
     modelo.fit(X_train, Y_train)
 
     resultados_3b[i] = modelo.score(X_train, Y_train)
+    print('Altura:' + str(hmax) + ' Performance:' + str(resultados_3b[i]))
     
 #%% Performance vs profundidad del modelo de árbol de decisión
 plt.figure(figsize=(12, 6))
@@ -368,13 +369,18 @@ plt.show()
 # configuración de hiperparámetros es la mejor, y qué performance
 # tiene.
 #--------------------------------------------------------
-
-alturas = [5,6,7,8,9,10,11,12,15,18]      
+alturas = [6,7,8,9,10,11,12,13,14,15]   
 nsplits = 10
 kf = KFold(n_splits=nsplits)
 
-resultados_test_3c = np.zeros((nsplits, len(alturas)))
-resultados_train_3c = np.zeros((nsplits, len(alturas)))
+res_test_3c_gini = np.zeros((nsplits, len(alturas)))
+res_train_3c_gini = np.zeros((nsplits, len(alturas)))
+
+res_test_3c_entropy = np.zeros((nsplits, len(alturas)))
+res_train_3c_entropy = np.zeros((nsplits, len(alturas)))
+
+res_test_3c_log_loss = np.zeros((nsplits, len(alturas)))
+res_train_3c_log_loss = np.zeros((nsplits, len(alturas)))
 
 for i, (train_index, test_index) in enumerate(kf.split(X_train)):
 
@@ -383,19 +389,42 @@ for i, (train_index, test_index) in enumerate(kf.split(X_train)):
     
     for j, h in enumerate(alturas):
         
-        modelo = tree.DecisionTreeClassifier(max_depth=h)
+        modelo = tree.DecisionTreeClassifier(criterion='gini',max_depth=h)
         modelo.fit(kf_X_train, kf_Y_train)
+        res_test_3c_gini[i,j] = modelo.score(kf_X_test, kf_Y_test)
+        res_train_3c_gini[i,j] = modelo.score(kf_X_train, kf_Y_train)
         
-        resultados_test_3c[i,j] = modelo.score(kf_X_test, kf_Y_test)
-        resultados_train_3c[i,j] = modelo.score(kf_X_train, kf_Y_train)
+        modelo = tree.DecisionTreeClassifier(criterion='entropy',max_depth=h)
+        modelo.fit(kf_X_train, kf_Y_train)
+        res_test_3c_entropy[i,j] = modelo.score(kf_X_test, kf_Y_test)
+        res_train_3c_entropy[i,j] = modelo.score(kf_X_train, kf_Y_train)
+        
+        modelo = tree.DecisionTreeClassifier(criterion='log_loss',max_depth=h)
+        modelo.fit(kf_X_train, kf_Y_train)
+        res_test_3c_log_loss[i,j] = modelo.score(kf_X_test, kf_Y_test)
+        res_train_3c_log_loss[i,j] = modelo.score(kf_X_train, kf_Y_train)
+        
 
-scores_promedio_test_3c = resultados_test_3c.mean(axis = 0)
-scores_promedio_train_3c = resultados_train_3c.mean(axis = 0)
+scores_promedio_test_3c_gini = res_test_3c_gini.mean(axis = 0)
+scores_promedio_train_3c_gini = res_train_3c_gini.mean(axis = 0)
+
+scores_promedio_test_3c_entropy = res_test_3c_entropy.mean(axis = 0)
+scores_promedio_train_3c_entropy = res_train_3c_entropy.mean(axis = 0)
+
+scores_promedio_test_3c_log_loss = res_test_3c_log_loss.mean(axis = 0)
+scores_promedio_train_3c_log_loss = res_train_3c_log_loss.mean(axis = 0)
 
 #%% Performance vs profundidad del modelo de árbol de decisión
 plt.figure(figsize=(12, 6))
-plt.plot(alturas, scores_promedio_test_3c, label='Test', marker='o')
-plt.plot(alturas, scores_promedio_train_3c, label='Train', marker='o')
+
+plt.plot(alturas, scores_promedio_test_3c_gini, label='Test-gini', marker='o')
+plt.plot(alturas, scores_promedio_test_3c_entropy, label='Test-entropy', marker='o')
+plt.plot(alturas, scores_promedio_test_3c_log_loss, label='Test-log_loss', marker='o')
+
+plt.plot(alturas, scores_promedio_train_3c_gini, label='Train-gini', marker='o')
+plt.plot(alturas, scores_promedio_train_3c_entropy, label='Train-entropy', marker='o')
+plt.plot(alturas, scores_promedio_train_3c_log_loss, label='Train-log_loss', marker='o')
+
 plt.xlabel('Profundidad del árbol')
 plt.ylabel('Performance del modelo')
 plt.legend()
@@ -412,8 +441,8 @@ plt.show()
 # clases.
 #--------------------------------------------------------
 
-# Mejor modelo: max_depth = 9
-modelo = tree.DecisionTreeClassifier(max_depth=9)
+# Mejor modelo: max_depth = 9, criterion = gini 
+modelo = tree.DecisionTreeClassifier(criterion='gini', max_depth=9)
 modelo.fit(X_train, Y_train)
 
 Y_pred_3d = modelo.predict(X_test)
