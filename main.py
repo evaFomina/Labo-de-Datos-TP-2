@@ -26,43 +26,9 @@ from sklearn.metrics import (confusion_matrix,
                              f1_score)
 import random
 from joblib import Parallel, delayed
-#%%======== plot-letters.py  ==================================================
-path = ""
-data = pd.read_csv(path + "emnist_letters_tp.csv", header= None)
-#%%
-# Elijo la fila correspondiente a la letra que quiero graficar
-n_row = 100
-row = data.iloc[n_row].drop(0)
-letra = data.iloc[n_row][0]
+from plot_letters import flip_rotate
 
-image_array = np.array(row).astype(np.float32)
-
-# Ploteo el grafico
-plt.imshow(image_array.reshape(28, 28))
-plt.title('letra: ' + letra)
-plt.axis('off')  
-plt.show()
-
-# Se observa que las letras estan rotadas en 90° y espejadas
-#%%
-def flip_rotate(image):
-    """
-    Función que recibe un array de numpy representando una
-    imagen de 28x28. Espeja el array y lo rota en 90°.
-    """
-    W = 28
-    H = 28
-    image = image.reshape(W, H)
-    image = np.fliplr(image)
-    image = np.rot90(image)
-    return image
-
-# Ploteo la imagen transformada
-plt.imshow(flip_rotate(image_array))
-plt.title('letra: ' + letra)
-plt.axis('off')  
-plt.show()
-#========== FIN  plot-letters.py  =============================================
+data = pd.read_csv("emnist_letters_tp.csv")
 
 #%%============================================================================
 # 1. Realizar un análisis exploratorio de los datos. Entre otras cosas, deben
