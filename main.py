@@ -328,6 +328,7 @@ vocales = data[(data[0] == 'A') |
                (data[0] == 'O') |
                (data[0] == 'U')]
 
+
 media_vocales = vocales.groupby(0).mean()
 std_vocales = media_vocales.std()
 std_vocales.sort_values(ascending=False, inplace=True)
@@ -348,7 +349,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(
 # profundidades.
 #--------------------------------------------------------
 
-alturas = range(1,22)
+alturas = range(1,22,2) 
 
 resultados_3b = np.zeros(len(alturas))
 
@@ -357,6 +358,7 @@ for i, hmax in enumerate(alturas):
     modelo.fit(X_train, Y_train)
 
     resultados_3b[i] = modelo.score(X_train, Y_train)
+    print(f"Profundidad {hmax}: Performance {resultados_3b[i]}")
     
 #%% Performance vs profundidad del modelo de árbol de decisión
 plt.figure(figsize=(12, 6))
@@ -375,33 +377,67 @@ plt.show()
 # tiene.
 #--------------------------------------------------------
 
-alturas = [5,6,7,8,9,10,11,12,15,18]      
+alturas = [7,8,9,10,11,12,13,14] 
 nsplits = 10
-kf = KFold(n_splits=nsplits)
 
-resultados_test_3c = np.zeros((nsplits, len(alturas)))
-resultados_train_3c = np.zeros((nsplits, len(alturas)))
+kf = KFold(n_splits=nsplits, 
+           shuffle=True, 
+           random_state=1)
+
+test_gini = np.zeros((nsplits, len(alturas)))
+train_gini = np.zeros((nsplits, len(alturas)))
+
+test_entropy = np.zeros((nsplits, len(alturas)))
+train_entropy = np.zeros((nsplits, len(alturas)))
 
 for i, (train_index, test_index) in enumerate(kf.split(X_train)):
 
     kf_X_train, kf_X_test = X_train.iloc[train_index], X_train.iloc[test_index]
     kf_Y_train, kf_Y_test = Y_train.iloc[train_index], Y_train.iloc[test_index]
-    
-    for j, h in enumerate(alturas):
-        
-        modelo = tree.DecisionTreeClassifier(max_depth=h)
-        modelo.fit(kf_X_train, kf_Y_train)
-        
-        resultados_test_3c[i,j] = modelo.score(kf_X_test, kf_Y_test)
-        resultados_train_3c[i,j] = modelo.score(kf_X_train, kf_Y_train)
 
-scores_promedio_test_3c = resultados_test_3c.mean(axis = 0)
-scores_promedio_train_3c = resultados_train_3c.mean(axis = 0)
+    for j, h in enumerate(alturas):
+        # Criterio Gini
+        modelo = tree.DecisionTreeClassifier(criterion='gini',
+                                             max_depth=h, 
+                                             random_state=1)
+        modelo.fit(kf_X_train, kf_Y_train)
+        test_gini[i,j] = modelo.score(kf_X_test, kf_Y_test)
+        train_gini[i,j] = modelo.score(kf_X_train, kf_Y_train)
+        
+        # Criterio Entropy
+        modelo = tree.DecisionTreeClassifier(criterion='entropy',
+                                             max_depth=h,
+                                             random_state=1)
+        modelo.fit(kf_X_train, kf_Y_train)
+        test_entropy[i,j] = modelo.score(kf_X_test, kf_Y_test)
+        train_entropy[i,j] = modelo.score(kf_X_train, kf_Y_train)      
+
+#%%          
+scores_promedio_test_gini = test_gini.mean(axis = 0)
+scores_promedio_train_gini = train_gini.mean(axis = 0)
+scores_promedio_test_entropy = test_entropy.mean(axis = 0)
+scores_promedio_train_entropy = train_entropy.mean(axis = 0)
+
+scores_promedio_test_gini_df = pd.DataFrame(scores_promedio_test_gini, index=alturas, columns=['Test_Gini'])
+scores_promedio_train_gini_df = pd.DataFrame(scores_promedio_train_gini, index=alturas, columns=['Train_Gini'])
+scores_promedio_test_entropy_df = pd.DataFrame(scores_promedio_test_entropy, index=alturas, columns=['Test_Entropy'])
+scores_promedio_train_entropy_df = pd.DataFrame(scores_promedio_train_entropy, index=alturas, columns=['Train_Entropy'])
+
+test_scores = pd.concat([scores_promedio_test_gini_df, scores_promedio_test_entropy_df], axis=1)
+train_scores = pd.concat([scores_promedio_train_gini_df, scores_promedio_train_entropy_df], axis=1)
+
+print(test_scores)
+print("\n",train_scores)
 
 #%% Performance vs profundidad del modelo de árbol de decisión
 plt.figure(figsize=(12, 6))
-plt.plot(alturas, scores_promedio_test_3c, label='Test', marker='o')
-plt.plot(alturas, scores_promedio_train_3c, label='Train', marker='o')
+
+plt.plot(alturas, scores_promedio_test_gini, label='Test-gini', marker='o')
+plt.plot(alturas, scores_promedio_test_entropy, label='Test-entropy', marker='v')
+
+plt.plot(alturas, scores_promedio_train_gini, label='Train-gini', marker='o')
+plt.plot(alturas, scores_promedio_train_entropy, label='Train-entropy', marker='v')
+
 plt.xlabel('Profundidad del árbol')
 plt.ylabel('Performance del modelo')
 plt.legend()
@@ -418,10 +454,9 @@ plt.show()
 # clases.
 #--------------------------------------------------------
 
-# Mejor modelo: max_depth = 9
-modelo = tree.DecisionTreeClassifier(max_depth=9)
+# Mejor modelo: max_depth = 10, criterion = entropy
+modelo = tree.DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=1)
 modelo.fit(X_train, Y_train)
-
 Y_pred_3d = modelo.predict(X_test)
 #%% Matriz de confusión 
 matriz_confusion_3d = confusion_matrix(Y_test, Y_pred_3d)
@@ -434,4 +469,4 @@ recall_3d = recall_score(Y_test, Y_pred_3d, average='micro')
 #%% F1 
 f1_3d = f1_score(Y_test, Y_pred_3d, average='micro')
 
-print(accuracy_3d, precision_3d, recall_3d, f1_3d)
+print(f"Accuracy {accuracy_3d} \nPrecision {precision_3d} \nRecall {recall_3d} \nF1 {f1_3d}")
