@@ -313,13 +313,20 @@ for k in valores_k:
     for i, (exactitud, combinacion) in enumerate(resultados_por_k[k], 1):
         print(f"Combinación #{i}: {combinacion}")
         print(f"Exactitud: {exactitud}")
+
+mejores_exactitudes_k = []
+for i in range((len(resultados_ordenados_k)-1)):
+    if i % 5 == 0:
+        mejores_exactitudes_k.append(resultados_ordenados_k[i][0])
+print(mejores_exactitudes_k)
         
+   
+plt.plot(valores_k, mejores_exactitudes_k)
+plt.xlabel("Numero de Vecinos K")
+plt.ylabel("Exactitud del modelo de los mejores atributos")
+plt.xlim((3,12))
+plt.show()
 ############
-# Como la funcion elige atributos aleatorios, pero en la última prueba el mejor 
-# resultado de 10 atributos me dio:
-# Con  k=9:
-# Combinación #1: [649, 224, 383, 575, 602, 490, 596, 548, 564, 170]
-# Exactitud:  0.9739583333333334
 #%% ===========================================================================
 # 3. (Clasificación multiclase) Dada una imagen se desea responder la
 # siguiente pregunta: ¿A cuál de las vocales corresponde la imagen?
