@@ -33,6 +33,37 @@ from plot_letters import flip_rotate
 
 data = pd.read_csv("emnist_letters_tp.csv", header=None)
 mlp.rcParams['figure.dpi'] = 200
+#%%
+ #########################################################################################################
+   ######################## Defino las funciones que van a ser utilizadas ##############################
+   
+   ## La siguiente función se ultiliza para determinar el accuracy de las 
+    # combinaciones que aportan más a la tarea de clasificación 
+def evaluar_combinacion(muestra):
+    X_train_subset = X_train[list(muestra)]
+    X_test_subset = X_test[list(muestra)]
+    
+    knn.fit(X_train_subset, Y_train)
+    y_pred = knn.predict(X_test_subset)
+    exactitud = accuracy_score(Y_test, y_pred)
+    
+    return exactitud, muestra
+
+   ## La siguiente función evalua para diferentes valores de k defnidos previamente que accuracy tiene 
+    # cada modelo, con el ranking de los mejores atributos que se obtubieron en la función evaluar_combinacion().
+
+def evaluar_combinacion_k(combinacion, k):
+    atributos = list(combinacion)
+    X_train_subset = X_train[atributos]
+    X_test_subset = X_test[atributos]
+    
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train_subset, Y_train)
+    y_pred = knn.predict(X_test_subset)
+    exactitud = accuracy_score(Y_test, y_pred)
+    
+    return exactitud, combinacion, k
+
 
 #%%============================================================================
 # 1. Realizar un análisis exploratorio de los datos. Entre otras cosas, deben
@@ -189,16 +220,7 @@ num_muestras = 100
 knn = KNeighborsClassifier(n_neighbors=3)
 atributos = X_train.columns.tolist()
 
-# Función para evaluar una combinación de atributos
-def evaluar_combinacion(muestra):
-    X_train_subset = X_train[list(muestra)]
-    X_test_subset = X_test[list(muestra)]
-    
-    knn.fit(X_train_subset, Y_train)
-    y_pred = knn.predict(X_test_subset)
-    exactitud = accuracy_score(Y_test, y_pred)
-    
-    return exactitud, muestra
+# Voy a usar la función para evaluar una combinación de atributos definida al principio
 
 # Genero 100 muestras aleatorias de 3 atributos
 muestras_seleccionadas_3 = [random.sample(atributos, 3) for _ in range(num_muestras)]
@@ -270,22 +292,11 @@ for i, (exactitud, atributos) in enumerate(mejores_5, 1):
 # Voy a usar de a 10 atributos ya que mejora mucho el accuracy
 valores_k = [3, 5, 7, 9, 12]
 
-def evaluar_combinacion_k(combinacion, k):
-    atributos = list(combinacion)
-    X_train_subset = X_train[atributos]
-    X_test_subset = X_test[atributos]
-    
-    knn = KNeighborsClassifier(n_neighbors=k)
-    knn.fit(X_train_subset, Y_train)
-    y_pred = knn.predict(X_test_subset)
-    exactitud = accuracy_score(Y_test, y_pred)
-    
-    return exactitud, combinacion, k
 
-# Evaluo las mejores combinaciones con diferentes valores de k en paralelo
+# Evaluo las mejores combinaciones con diferentes valores de k en paralelo con la función definida previamente.
 resultados_k = Parallel(n_jobs=-1)(
     delayed(evaluar_combinacion_k)(combinacion, k)
-    for exactitud, combinacion in mejores_5  #lo que obtuve en la funcion anterior
+    for exactitud, combinacion in mejores_5  #lo que obtuve en la función evaluar_combinación().
     for k in valores_k
 )
 
