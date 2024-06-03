@@ -34,6 +34,16 @@
 \section{Introducción}
 \section{Experimentos realizados}
 \subsection{Clasificación binaria}
+Para proceder con la tarea de clasificación binaria, fue necesario seleccionar solamente dos clases de todos los datos. Se seleccionaron las letras 'A' y 'L', como se pidió en la consigna.
+Como el dataset que nos llegó está limpio, no hubo ningún obstaculo en conseguir que estén balanceadas las partes de datos de entrenamiento y de evaluación ('X train', 'X test'). 
+\begin{itemize}
+    \item[]
+       \textbf{Experimento 1: Ajusto de un modelo de KNN eligiendo 3 atributos}
+
+En este experimento se ajustó un modelo de K-Nearest Neighbors (KNN) en el valor de cantidad de vecino = 3. 
+Para seleccionar los mejores 3 atributos se hizo un sample de 100 atributos 
+\end{itemize}
+
 \subsection{Clasificación multiclase}
 Se cuenta con un modelo de árbol de decisión tal que, dada una imagen, predice a cuál de las vocales ('A', 'E', 'I', 'O', 'U') corresponde. El objetivo de los experimentos descriptos a continuación es seleccionar el mejor modelo que cumpla esta tarea. Para esto se generó un dataframe tomando sólo los datos correspondientes a las letras mencionadas y se los separó en un conjunto de datos de desarrollo (o entrenamiento) y otro de validación (o held-out). Para reducir el tiempo de ejecución de los experimentos, se tomaron solo los atributos (píxeles de la imagen) considerados más relevantes.
 
