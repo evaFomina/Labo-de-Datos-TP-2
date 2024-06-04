@@ -11,10 +11,11 @@ Fecha          : 1C2024
 # Imports
 #=============================================================================
 
-import matplotlib.pyplot as plt
-import matplotlib as mlp
 import pandas as pd
 import numpy as np
+
+import matplotlib.pyplot as plt
+import matplotlib as mlp
 import seaborn as sns
 
 from sklearn import tree
@@ -27,7 +28,7 @@ from sklearn.metrics import (confusion_matrix,
                              recall_score, 
                              f1_score)
 
-import random
+from itertools import combinations
 from joblib import Parallel, delayed
 from plot_letters import flip_rotate
 
@@ -224,7 +225,11 @@ atributos = X_train.columns.tolist()
 # Voy a usar la función para evaluar una combinación de atributos definida al principio
 
 # Genero 100 muestras aleatorias de 3 atributos
-muestras_seleccionadas_3 = [random.sample(atributos, 3) for _ in range(num_muestras)]
+media_A_L = letras_A_L.groupby(0).mean()
+std_A_L = media_A_L.std()
+std_A_L.sort_values(ascending=False, inplace=True)
+mejores_atr = std_A_L.index.to_numpy()[:10]
+muestras_seleccionadas_3 = combinations(mejores_atr, 3)
 
 # Evaluo las combinaciones en paralelo. Funciones paralel y delayed permiten ejecutar el bucle de
 # evaluación de combinaciones en paralelo, aprovechando todos los núcleos de CPU disponibles.
@@ -243,10 +248,7 @@ for i, (exactitud, atributos) in enumerate(mejores_5, 1):
 #%%
 # Para 5 atributos   
 
-atributos = X_train.columns.tolist()
-num_muestras = 100
-
-muestras_seleccionadas_5 = [random.sample(atributos, 5) for _ in range(num_muestras)]
+muestras_seleccionadas_5 = combinations(mejores_atr, 5)
 
 resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_5)
 
@@ -261,10 +263,8 @@ for i, (exactitud, atributos) in enumerate(mejores_5, 1):
 # Se puede ver que el mejor accuracy es mas alto que en el de 3 atributos.
 #%%
 # Para 10 atributos
-atributos = X_train.columns.tolist()
-num_muestras = 100
 
-muestras_seleccionadas_10 = [random.sample(atributos, 10) for _ in range(num_muestras)]
+muestras_seleccionadas_10 = [mejores_atr]
 
 resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_10)
 
@@ -292,7 +292,6 @@ for i, (exactitud, atributos) in enumerate(mejores_5, 1):
 
 # Voy a usar de a 10 atributos ya que mejora mucho el accuracy
 valores_k = [3, 5, 7, 9, 12]
-
 
 # Evaluo las mejores combinaciones con diferentes valores de k en paralelo con la función definida previamente.
 resultados_k = Parallel(n_jobs=-1)(
@@ -347,7 +346,14 @@ vocales = data[(data[0] == 'A') |
                (data[0] == 'O') |
                (data[0] == 'U')]
 
-X = vocales.drop(0, axis=1)
+
+media_vocales = vocales.groupby(0).mean()
+std_vocales = media_vocales.std()
+std_vocales.sort_values(ascending=False, inplace=True)
+mejores_atr_v = std_vocales.index.to_numpy()[:160] 
+
+X = vocales[mejores_atr_v]
+# X = vocales.drop(0, axis=1)
 Y = vocales[0]
 X_train, X_test, Y_train, Y_test = train_test_split(
     X, 
@@ -390,6 +396,16 @@ plt.show()
 #--------------------------------------------------------
 alturas = range(7,15)
 nsplits = 10
+
+kf = KFold(n_splits=nsplits, 
+           shuffle=True, 
+           random_state=1)
+
+test_gini = np.zeros((nsplits, len(alturas)))
+train_gini = np.zeros((nsplits, len(alturas)))
+
+test_entropy = np.zeros((nsplits, len(alturas)))
+train_entropy = np.zeros((nsplits, len(alturas)))
 
 kf = KFold(n_splits=nsplits, 
            shuffle=True, 
@@ -469,7 +485,6 @@ plt.show()
 # Mejor modelo: max_depth = 10, criterion = entropy
 modelo = tree.DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=1)
 modelo.fit(X_train, Y_train)
-
 Y_pred_3d = modelo.predict(X_test)
 #%% Matriz de confusión 
 matriz_confusion_3d = confusion_matrix(Y_test, Y_pred_3d)
