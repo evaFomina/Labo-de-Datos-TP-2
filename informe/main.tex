@@ -32,6 +32,66 @@
 
 %\section{Resumen}
 \section{Introducción}
+
+El objetivo de este trabajo práctico es desarrollar dos modelos de clasificación de letras mayúsculas escritas a mano, uno para las letras ``A'' y ``L'' y otro para todas las vocales del alfabeto latino. Usando los métodos de aprendizaje automático supervisado \textbf{k-nearest neighbors} (\textbf{k-NN}) y \textbf{decision tree} respectivamente.
+
+Para esto contamos con una versión reducida del popular dataset EMNIST (Cohen et al., 2017), que incluye solo las letras mayúsculas del alfabeto inglés. Viene dado como una matriz cuyas columnas representan el valor del canal alpha de cada pixel de una imagen de tamaño $28 \times 28$, junto con un label (785 columnas) y cuyas filas son cada elemento de la muestra. Este cuenta con 26 clases (una para cada letra) y una muestra de 2400 letras escritas a mano para cada clase, en total 62400 elementos balanceados.
+
+A continuación, en lo que resta de la sección, los valores de los pixeles serán escalados con el método min-max.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{figuras/1a.png}
+	\caption{Media de cada parametro para cada clase.}
+	\label{fig:1a}
+\end{figure}
+
+Con el proposito de reducir la complejidad de nuestros modelos, para seleccionar los atributos mas relevantes, tomamos la media de cada parametro por clase, como se observa en la Figura \ref{fig:1a}. Luego tomamos la desviación estandar de cada pixel de estas medias como se observa en la Figura \ref{fig:2a}.
+
+\begin{figure}[H]
+
+	\centering
+	\includegraphics[scale=0.8]{figuras/2a.png}
+	\caption{Desviación estandar entre la media de todas las clases.}
+	\label{fig:2a}
+\end{figure}
+
+Nuestra hipótesis es que las variables con mas desviación estandar entre clases, codifican mas información sobre estas. Como nuestros modelos van a ser entrenados sobre un subconjunto de estas clases, tomamos las mas relevantes para nuestro objetivo, como se ve en la Figura \ref{fig:3a}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{figuras/3a.png}
+	\caption{Desviación estandar entre la media de clases relevantes.}
+	\label{fig:3a}
+\end{figure}
+
+Luego para analizar que tanto se parecen dos clases entre si tomamos el coeficiente de correlación de Pearson entre las medias de cada clase. Por ejemplo las letras ``E'' y ``L'' tienen un coeficiente de correlación de $\approx 0.64$ a comparación de las letras ``E'' y ``M'' que tienen un coeficiente de correlación de $\approx 0.41$. Estos resultados son intuitivos ya que las letras ``E'' y ``L'' comparten trazos. En la Figura \ref{fig:4a} vemos el coeficiente de correlación para todos los posibles pares de letras.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.6]{figuras/4a.png}
+	\caption{Coeficientes de correlación entre la media de cada clase.}
+	\label{fig:4a}
+\end{figure}
+
+Por otro lado para analizar que tanto se parecen los elementos de una clase entre si, tomamos la media de la desviación estandar de cada pixel de esa clase. Por ejemplo en la Figura \ref{fig:5a} podemos ver la desviación estandar para la letra ``C'' su media es $\approx 0.20$.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.8]{figuras/5a.png}
+	\caption{Desviación estandar de cada pixel de la letra C.}
+	\label{fig:5a}
+\end{figure}
+
+Si realizamos este mismo proceso para cada letra obtenemos los resultados de la Figura \ref{fig:6a}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.8]{figuras/6a.png}
+	\caption{Media de la desviación estandar para cada letra.}
+	\label{fig:6a}
+\end{figure}
+
 \section{Experimentos realizados}
 \subsection{Clasificación binaria}
 Para proceder con la tarea de clasificación binaria, fue necesario seleccionar solamente dos clases de todos los datos. Se seleccionaron las letras 'A' y 'L', como se pidió en la consigna.
