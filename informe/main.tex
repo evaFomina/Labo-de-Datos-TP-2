@@ -35,18 +35,18 @@
 
 El objetivo de este trabajo práctico es desarrollar dos modelos de clasificación de letras mayúsculas escritas a mano, uno para las letras ``A'' y ``L'' y otro para todas las vocales del alfabeto latino. Usando los métodos de aprendizaje automático supervisado \textbf{k-nearest neighbors} (\textbf{k-NN}) y \textbf{decision tree} respectivamente.
 
-Para esto contamos con una versión reducida del popular dataset EMNIST (Cohen et al., 2017), que incluye solo las letras mayúsculas del alfabeto inglés. Viene dado como una matriz cuyas columnas representan el valor del canal alpha de cada pixel de una imagen de tamaño $28 \times 28$, junto con un label (785 columnas) y cuyas filas son cada elemento de la muestra. Este cuenta con 26 clases (una para cada letra) y una muestra de 2400 letras escritas a mano para cada clase, en total 62400 elementos balanceados.
+Para esto contamos con una versión reducida del popular dataset EMNIST (Cohen et al., 2017), que incluye solo las letras mayúsculas del alfabeto inglés. Viene dado como una matriz cuyas columnas representan el valor del canal alpha de cada píxel de una imagen de tamaño $28 \times 28$, junto con un label (785 columnas) y cuyas filas son cada elemento de la muestra. Este cuenta con 26 clases (una para cada letra) y una muestra de 2400 letras escritas a mano para cada clase, en total 62400 elementos balanceados.
 
-A continuación, en lo que resta de la sección, los valores de los pixeles serán escalados con el método min-max.
+A continuación, en lo que resta de la sección, los valores de los píxeles serán escalados con el método \textit{min-max}.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.5]{figuras/1a.png}
-	\caption{Media de cada parametro para cada clase.}
+	\caption{Media de cada parámetro para cada clase.}
 	\label{fig:1a}
 \end{figure}
 
-Con el proposito de reducir la complejidad de nuestros modelos, para seleccionar los atributos mas relevantes, tomamos la media de cada parametro por clase, como se observa en la Figura \ref{fig:1a}. Luego tomamos la desviación estandar de cada pixel de estas medias como se observa en la Figura \ref{fig:2a}.
+Con el propósito de reducir la complejidad de nuestros modelos, para seleccionar los atributos más relevantes, tomamos la media de cada parámetro por clase, como se observa en la Figura \ref{fig:1a}. Luego, tomamos la desviación estándar de cada pixel de estas medias como se observa en la Figura \ref{fig:2a}.
 
 \begin{figure}[H]
 
@@ -56,16 +56,16 @@ Con el proposito de reducir la complejidad de nuestros modelos, para seleccionar
 	\label{fig:2a}
 \end{figure}
 
-Nuestra hipótesis es que las variables con mas desviación estandar entre clases, codifican mas información sobre estas. Como nuestros modelos van a ser entrenados sobre un subconjunto de estas clases, tomamos las mas relevantes para nuestro objetivo, como se ve en la Figura \ref{fig:3a}.
+Nuestra hipótesis es que las variables con más desviación estándar entre clases, codifican mas información sobre éstas. Como nuestros modelos van a ser entrenados sobre un subconjunto de estas clases, tomamos las más relevantes para nuestro objetivo, como se ve en la Figura \ref{fig:3a}.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.7]{figuras/3a.png}
-	\caption{Desviación estandar entre la media de clases relevantes.}
+	\caption{Desviación estándar entre la media de clases relevantes.}
 	\label{fig:3a}
 \end{figure}
 
-Luego para analizar que tanto se parecen dos clases entre si tomamos el coeficiente de correlación de Pearson entre las medias de cada clase. Por ejemplo las letras ``E'' y ``L'' tienen un coeficiente de correlación de $\approx 0.64$ a comparación de las letras ``E'' y ``M'' que tienen un coeficiente de correlación de $\approx 0.41$. Estos resultados son intuitivos ya que las letras ``E'' y ``L'' comparten trazos. En la Figura \ref{fig:4a} vemos el coeficiente de correlación para todos los posibles pares de letras.
+Luego, para analizar qué tanto se parecen dos clases entre sí tomamos el coeficiente de correlación de Pearson entre las medias de cada clase. Por ejemplo las letras ``E'' y ``L'' tienen un coeficiente de correlación de $\approx 0.64$ a comparación de las letras ``E'' y ``M'' que tienen un coeficiente de correlación de $\approx 0.41$. Estos resultados son intuitivos ya que las letras ``E'' y ``L'' comparten trazos. En la Figura \ref{fig:4a} vemos el coeficiente de correlación para todos los posibles pares de letras.
 
 \begin{figure}[H]
 	\centering
@@ -74,12 +74,12 @@ Luego para analizar que tanto se parecen dos clases entre si tomamos el coeficie
 	\label{fig:4a}
 \end{figure}
 
-Por otro lado para analizar que tanto se parecen los elementos de una clase entre si, tomamos la media de la desviación estandar de cada pixel de esa clase. Por ejemplo en la Figura \ref{fig:5a} podemos ver la desviación estandar para la letra ``C'' su media es $\approx 0.20$.
+Por otro lado, para analizar qué tanto se parecen los elementos de una clase entre sí, tomamos la media de la desviación estándar de cada píxel de esa clase. Por ejemplo en la Figura \ref{fig:5a} podemos ver la desviación estándar para la letra ``C'', su media es $\approx 0.20$.
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.8]{figuras/5a.png}
-	\caption{Desviación estandar de cada pixel de la letra C.}
+	\caption{Desviación estándar de cada píxel de la letra C.}
 	\label{fig:5a}
 \end{figure}
 
@@ -88,25 +88,26 @@ Si realizamos este mismo proceso para cada letra obtenemos los resultados de la 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.8]{figuras/6a.png}
-	\caption{Media de la desviación estandar para cada letra.}
+	\caption{Media de la desviación estándar para cada letra.}
 	\label{fig:6a}
 \end{figure}
 
 \section{Experimentos realizados}
 \subsection{Clasificación binaria}
 Para proceder con la tarea de clasificación binaria, fue necesario seleccionar solamente dos clases de todos los datos. Se seleccionaron las letras 'A' y 'L', como se pidió en la consigna.
-Como el dataset que nos llegó está limpio, no hubo ningún obstaculo en conseguir que estén balanceadas las partes de datos de entrenamiento y de evaluación ('X train', 'X test'). 
+Como el dataset dado estaba ``limpio'', no hubo ningún obstáculo para conseguir que las partes de datos de entrenamiento y de evaluación (X\_train, X\_test) estuvieran balanceadas.
+
 \begin{itemize}
     \item[]
        \textbf{Experimento 1: Ajuste de un modelo de KNN eligiendo 3 atributos}
 
-En este experimento se ajustó un modelo de K-Nearest Neighbors (KNN) en el valor de cantidad de vecinos = 3. 
-Para seleccionar los mejores 3 atributos se hizo un sample de atributos aleatorios que luego fueron evaluados según su desviación esandar (explicación en la introducción). 
-Los resultados fueron medidos en exactitud. El mejor resultado nos dio 0.977. Y los mejores atributos fueron: (548, 520, 574) (fig. 7 ).
+En este experimento se ajustó un modelo de K-Nearest Neighbors (KNN) con un valor de cantidad de vecinos igual a 3. 
+Para seleccionar los mejores 3 atributos, se hizo un sample de atributos aleatorios que luego fueron evaluados según su desviación estándar (explicación en la introducción). 
+Los resultados fueron medidos en exactitud. El mejor resultado nos dio 0.977. Y los mejores atributos fueron: (548, 520, 574) (fig.\ref{fig:7}).
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{figuras/2a_1.jpg}
+	\includegraphics[scale=0.8]{figuras/2a_1.jpg}
 	\caption{Los 5 mejores resultados eligiendo 3  atributos}
 	\label{fig:7}
 \end{figure}
@@ -115,11 +116,12 @@ Los resultados fueron medidos en exactitud. El mejor resultado nos dio 0.977. Y 
 \begin{itemize}
     \item[]
        \textbf{Experimento 2: Ajuste de un modelo de KNN eligiendo más atributos}
-Para ver si el modelo mejora con mas atributos se probó, de la forma similar que en el experimento 1, combinar 5 atributos y 10 atributos.
-El accuracy mejora un poco con 5 atributos, y en el caso de 10 combinaciones hasta empeora (fig. 8). Esto puede indicar el overfitting en el modelo.
+
+Para ver si el modelo mejora con más atributos se probó, de forma similar que en el experimento 1, combinar 5 atributos y 10 atributos.
+El accuracy mejora un poco con 5 atributos, y en el caso de 10 combinaciones hasta empeora (fig.\ref{fig:8}). Esto puede indicar el overfitting en el modelo.
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{figuras/2a_2.jpg}
+	\includegraphics[scale=0.7]{figuras/2a_2.jpg}
 	\caption{Exactitudes con combinaciones de 5 atributos y de 10 aributos}
 	\label{fig:8}
 \end{figure}
@@ -129,12 +131,12 @@ El accuracy mejora un poco con 5 atributos, y en el caso de 10 combinaciones has
     \item []
     \textbf{Experimento 3: Ajuste de modelos tomando diferentes valores de k y de combinaciones de atributos}
 
-En esta última sección se tomaron diferentes valores de cantidad de vecinos para encontrar el mejor modelo. Se tomaron combinaciones de 5 atributos ya daba la mejor exactitud. Después de realizar el procedimiento se concluyó que para valores de k entre 3 y 5 el modelo funciona mejor. (fig. 9)
+En este experimento se tomaron diferentes valores de cantidad de vecinos para encontrar el mejor modelo. Se tomaron combinaciones de 5 atributos ya que daba la mejor exactitud. Después de realizar el procedimiento se concluyó que para valores de k entre 3 y 5 el modelo funciona mejor. (fig.\ref{fig:9})
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{figuras/2e.png}
-	\caption{Gráfico de cambio de exactitud del modelo dependiendo de la cantidad de vecinos que se usa.}
+	\includegraphics[scale=0.8]{figuras/2e.png}
+	\caption{Gráfico de cambio de exactitud del modelo dependiendo de la cantidad de vecinos.}
 	\label{fig:9}
 \end{figure}
 
@@ -232,10 +234,10 @@ A partir de los experimentos realizados, se pueden extraer las siguientes conclu
 \begin{itemize}
 
 \item
-        Importancia de la reducción de dimensionalidad
+        Importancia de la reducción de dimensionalidad:
 
- 	Se mostró que aumentando las dimensiones en el modelo se complejiza más y tiende a tener el overfitting. Y que con tal de elegir las variables más importante se puede lograr mejor performance del modelo.
-	
+        Se mostró que al aumentar las dimensiones en el modelo, éste se vuelve más complejo y tiende a sufrir de overfitting. Además, al elegir las variables más importantes se puede lograr una mejor performance del modelo.
+
 \item
 	Importancia de la profundidad del árbol (\textit{max\_depth}):
 
