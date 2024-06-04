@@ -273,11 +273,11 @@ muestras_seleccionadas_3 = combinations(mejores_atr, 3)
 resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_3)
 
 # Ordeno resultados por exactitud en orden descendente y obtengo las 5 mejores combinaciones
-resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
-mejores_5 = resultados_ordenados[:5]
+resultados_ordenados_3 = sorted(resultados, key=lambda x: x[0], reverse=True)
+mejores_5_3 = resultados_ordenados_3[:5]
 
 # Imprimo los 5 mejores conjuntos de atributos y sus exactitudes
-for i, (exactitud, atributos) in enumerate(mejores_5, 1):
+for i, (exactitud, atributos) in enumerate(mejores_5_3, 1):
     print(f"Conjunto de atributos #{i}: {atributos}")
     print(f"Exactitud: {exactitud}")
     
@@ -289,10 +289,10 @@ muestras_seleccionadas_5 = combinations(mejores_atr, 5)
 resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_5)
 
 
-resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
-mejores_5 = resultados_ordenados[:5]
+resultados_ordenados_5 = sorted(resultados, key=lambda x: x[0], reverse=True)
+mejores_5_5 = resultados_ordenados_5[:5]
 
-for i, (exactitud, atributos) in enumerate(mejores_5, 1):
+for i, (exactitud, atributos) in enumerate(mejores_5_5, 1):
     print(f"Conjunto de atributos #{i}: {atributos}")
     print(f"Exactitud: {exactitud}")
     
@@ -300,19 +300,19 @@ for i, (exactitud, atributos) in enumerate(mejores_5, 1):
 #%%
 # Para 10 atributos
 
-muestras_seleccionadas_10 = [mejores_atr]
+muestras_seleccionadas_10 = combinations(mejores_atr, 10)
 
 resultados = Parallel(n_jobs=-1)(delayed(evaluar_combinacion)(muestra) for muestra in muestras_seleccionadas_10)
 
 
-resultados_ordenados = sorted(resultados, key=lambda x: x[0], reverse=True)
-mejores_5 = resultados_ordenados[:5]
+resultados_ordenados_10 = sorted(resultados, key=lambda x: x[0], reverse=True)
+mejores_5_10 = resultados_ordenados_10[:5]
 
-for i, (exactitud, atributos) in enumerate(mejores_5, 1):
+for i, (exactitud, atributos) in enumerate(mejores_5_10, 1):
     print(f"Conjunto de atributos #{i}: {atributos}")
     print(f"Exactitud: {exactitud}")
 
-# Con mas atributos mejora el accuracy
+
 
 #%%------------------------------------------------------
 # e. Comparar modelos de KNN utilizando distintos atributos y distintos
@@ -326,13 +326,13 @@ for i, (exactitud, atributos) in enumerate(mejores_5, 1):
 #--------------------------------------------------------
 
 
-# Voy a usar de a 10 atributos ya que mejora mucho el accuracy
+# Voy a usar de a 5 atributos 
 valores_k = [3, 5, 7, 9, 12]
 
 # Evaluo las mejores combinaciones con diferentes valores de k en paralelo con la función definida previamente.
 resultados_k = Parallel(n_jobs=-1)(
     delayed(evaluar_combinacion_k)(combinacion, k)
-    for exactitud, combinacion in mejores_5  #lo que obtuve en la función evaluar_combinación().
+    for exactitud, combinacion in mejores_5_5  #lo que obtuve en la función evaluar_combinación().
     for k in valores_k
 )
 
