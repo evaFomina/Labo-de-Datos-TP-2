@@ -327,7 +327,7 @@ plt.xlabel("Numero de Vecinos K")
 plt.ylabel("Exactitud del modelo de los mejores atributos")
 plt.xlim((3,12))
 plt.show()
-############
+
 #%% ===========================================================================
 # 3. (Clasificación multiclase) Dada una imagen se desea responder la
 # siguiente pregunta: ¿A cuál de las vocales corresponde la imagen?
