@@ -78,9 +78,10 @@ def evaluar_combinacion_k(combinacion, k):
 min_max_data = data.copy()
 min_max_data[min_max_data.columns[1:]] = MinMaxScaler().fit_transform(min_max_data[min_max_data.columns[1:]])
 
-cant_filas = min_max_data.count(axis=1)
-cant_cols = min_max_data.count(axis=0)
-clases_letras = min_max_data[0].unique()
+cant_filas = len(min_max_data.index)
+cant_atributos = len(min_max_data.drop(0, axis=1).columns)
+tipos_clases = min_max_data[0].unique()
+cant_clases = len(tipos_clases)
 
 #%%------------------------------------------------------
 # a. ¿Cuáles parecen ser atributos relevantes para predecir la letra a la que
@@ -90,6 +91,7 @@ clases_letras = min_max_data[0].unique()
 
 media_por_clase = min_max_data.groupby(0).mean()
 
+# figura 1
 fig, ax = plt.subplots(6,5, figsize=(10,10))
 
 it = media_por_clase.iterrows()
@@ -109,7 +111,10 @@ plt.tight_layout(w_pad=0.8, h_pad=1.06)
 plt.show()
 
 #%%
+# Hipotetizamos que los valores con desviación estandar mas alta, serían los mas
+# relevantes. Figura y explicación en el informe.
 
+# figura 2
 fig, ax = plt.subplots()
 
 std_entre_clase = media_por_clase.std()
@@ -117,6 +122,38 @@ std_entre_clase = media_por_clase.std()
 sns.heatmap(flip_rotate(std_entre_clase.to_numpy()), cmap='mako',ax=ax)
 ax.axis('off')
 plt.show()
+
+#%% 
+
+# figura 3
+fig, ax = plt.subplots(ncols=2, figsize=(10,4))
+
+letras_A_L = min_max_data[(data[0] == 'A') | 
+                          (data[0] == 'L')]
+
+media_A_L = letras_A_L.groupby(0).mean()
+std_A_L = media_A_L.std()
+
+vocales = min_max_data[(data[0] == 'A') | 
+                       (data[0] == 'E') | 
+                       (data[0] == 'I') | 
+                       (data[0] == 'O') |
+                       (data[0] == 'U')]
+
+media_vocales = vocales.groupby(0).mean()
+std_vocales = media_vocales.std()
+
+sns.heatmap(flip_rotate(std_A_L.to_numpy()), cmap='mako', ax=ax[0])
+sns.heatmap(flip_rotate(std_vocales.to_numpy()), cmap='mako', ax=ax[1])
+
+ax[0].axis('off')
+ax[0].set_title("Desviación estandar entre A y L.")
+
+ax[1].axis('off')
+ax[1].set_title("Desviación estandar entre vocales.")
+
+plt.show()
+
 
 #%%------------------------------------------------------
 # b. ¿Hay letras que son parecidas entre sí? Por ejemplo, ¿Qué es más
@@ -134,6 +171,7 @@ print(f"Coeficiente de correlación para E y M: {esp_E.corr(esp_M)}")
 trans_mpc = media_por_clase.transpose()
 corr_matrix = trans_mpc.corr()
 
+# Figura 4
 fig, ax = plt.subplots(figsize=(8,7))
 
 sns.heatmap(corr_matrix, ax=ax, cmap=sns.color_palette("mako_r", as_cmap=True))
@@ -217,14 +255,12 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state = 1,
 #--------------------------------------------------------
 
 # Evaluo el modelo de knn con k = 3 para 3 atributos seleccionados al azar
-
-num_muestras = 100
 knn = KNeighborsClassifier(n_neighbors=3)
 atributos = X_train.columns.tolist()
 
 # Voy a usar la función para evaluar una combinación de atributos definida al principio
 
-# Genero 100 muestras aleatorias de 3 atributos
+# Genero todas las combinaciones de 3 elementos de los 10 mejores atributos
 media_A_L = letras_A_L.groupby(0).mean()
 std_A_L = media_A_L.std()
 std_A_L.sort_values(ascending=False, inplace=True)
