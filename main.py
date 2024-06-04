@@ -382,15 +382,17 @@ vocales = data[(data[0] == 'A') |
                (data[0] == 'O') |
                (data[0] == 'U')]
 
-
+# Se obtienen los mejores atributos 
 media_vocales = vocales.groupby(0).mean()
 std_vocales = media_vocales.std()
 std_vocales.sort_values(ascending=False, inplace=True)
 mejores_atr_v = std_vocales.index.to_numpy()[:160] 
 
+# Datos de vocales (solo tomando mejores atributos)
 X = vocales[mejores_atr_v]
-# X = vocales.drop(0, axis=1)
 Y = vocales[0]
+
+# Datos de entrenamiento (train) y evaluación (held-out)
 X_train, X_test, Y_train, Y_test = train_test_split(
     X, 
     Y, 
@@ -402,19 +404,20 @@ X_train, X_test, Y_train, Y_test = train_test_split(
 # b. Ajustar un modelo de árbol de decisión. Probar con distintas
 # profundidades.
 #--------------------------------------------------------
-
+# Experimento 1 (Clasificación multiclase)
 alturas = range(1,22,2) 
 
 resultados_3b = np.zeros(len(alturas))
 
 for i, hmax in enumerate(alturas):
-    modelo = tree.DecisionTreeClassifier(max_depth = hmax)
+    modelo = tree.DecisionTreeClassifier(max_depth = hmax,random_state=1)
     modelo.fit(X_train, Y_train)
 
     resultados_3b[i] = modelo.score(X_train, Y_train)
     print(f"Profundidad {hmax}: Performance {resultados_3b[i]}")
     
 #%% Performance vs profundidad del modelo de árbol de decisión
+# Figura del Experimento 1 (Clasificación multiclase)
 plt.figure(figsize=(12, 6))
 plt.plot(alturas, resultados_3b, label='Train', marker='o')
 plt.xlabel('Profundidad del árbol')
@@ -430,6 +433,8 @@ plt.show()
 # configuración de hiperparámetros es la mejor, y qué performance
 # tiene.
 #--------------------------------------------------------
+# Experimento 2 (Clasificación multiclase)
+
 alturas = range(7,15)
 nsplits = 10
 
@@ -443,16 +448,7 @@ train_gini = np.zeros((nsplits, len(alturas)))
 test_entropy = np.zeros((nsplits, len(alturas)))
 train_entropy = np.zeros((nsplits, len(alturas)))
 
-kf = KFold(n_splits=nsplits, 
-           shuffle=True, 
-           random_state=1)
-
-test_gini = np.zeros((nsplits, len(alturas)))
-train_gini = np.zeros((nsplits, len(alturas)))
-
-test_entropy = np.zeros((nsplits, len(alturas)))
-train_entropy = np.zeros((nsplits, len(alturas)))
-
+# Validación cruzada KFold utilizando datos de entrenamiento (X_train)
 for i, (train_index, test_index) in enumerate(kf.split(X_train)):
 
     kf_X_train, kf_X_test = X_train.iloc[train_index], X_train.iloc[test_index]
@@ -476,16 +472,19 @@ for i, (train_index, test_index) in enumerate(kf.split(X_train)):
         train_entropy[i,j] = modelo.score(kf_X_train, kf_Y_train)      
 
 #%%          
+# Promedios de performance según criterion para cada max_depth 
 scores_promedio_test_gini = test_gini.mean(axis = 0)
 scores_promedio_train_gini = train_gini.mean(axis = 0)
 scores_promedio_test_entropy = test_entropy.mean(axis = 0)
 scores_promedio_train_entropy = train_entropy.mean(axis = 0)
 
+# Lo anterior pasado a DataFrames
 scores_promedio_test_gini_df = pd.DataFrame(scores_promedio_test_gini, index=alturas, columns=['Test_Gini'])
 scores_promedio_train_gini_df = pd.DataFrame(scores_promedio_train_gini, index=alturas, columns=['Train_Gini'])
 scores_promedio_test_entropy_df = pd.DataFrame(scores_promedio_test_entropy, index=alturas, columns=['Test_Entropy'])
 scores_promedio_train_entropy_df = pd.DataFrame(scores_promedio_train_entropy, index=alturas, columns=['Train_Entropy'])
 
+# Concateno los promedios según test y train (obtenidos a partir del KFolding)
 test_scores = pd.concat([scores_promedio_test_gini_df, scores_promedio_test_entropy_df], axis=1)
 train_scores = pd.concat([scores_promedio_train_gini_df, scores_promedio_train_entropy_df], axis=1)
 
@@ -493,6 +492,7 @@ print(test_scores)
 print("\n",train_scores)
 
 #%% Performance vs profundidad del modelo de árbol de decisión
+# Figura del Experimento 2 (Clasificación multiclase)
 plt.figure(figsize=(12, 6))
 
 plt.plot(alturas, scores_promedio_test_gini, label='Test-gini', marker='o')
@@ -517,10 +517,12 @@ plt.show()
 # matriz de confusión y evaluar los distintos tipos de errores para las
 # clases.
 #--------------------------------------------------------
-
-# Mejor modelo: max_depth = 10, criterion = entropy
-modelo = tree.DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=1)
+# Experimento 3 (Clasificación multiclase)
+# Mejor modelo: max_depth = 9, criterion = entropy
+modelo = tree.DecisionTreeClassifier(criterion='entropy', max_depth=9, random_state=1)
+# Entrenamiento con datos de desarrollo 
 modelo.fit(X_train, Y_train)
+# Predicción con conjunto held-out 
 Y_pred_3d = modelo.predict(X_test)
 #%% Matriz de confusión 
 matriz_confusion_3d = confusion_matrix(Y_test, Y_pred_3d)
