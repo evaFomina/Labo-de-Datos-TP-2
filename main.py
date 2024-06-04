@@ -33,9 +33,10 @@ from plot_letters import flip_rotate
 
 data = pd.read_csv("emnist_letters_tp.csv", header=None)
 mlp.rcParams['figure.dpi'] = 200
-#%%
- #########################################################################################################
-   ######################## Defino las funciones que van a ser utilizadas ##############################
+
+#%%------------------------------------------------------
+# Definición de funciones 
+#--------------------------------------------------------
    
    ## La siguiente función se ultiliza para determinar el accuracy de las 
     # combinaciones que aportan más a la tarea de clasificación 
