@@ -105,13 +105,13 @@ Para seleccionar los mejores 3 atributos se hizo un sample de 100 atributos
 \end{itemize}
 
 \subsection{Clasificación multiclase}
-Se cuenta con un modelo de árbol de decisión tal que, dada una imagen, predice a cuál de las vocales ('A', 'E', 'I', 'O', 'U') corresponde. El objetivo de los experimentos descriptos a continuación es seleccionar el mejor modelo que cumpla esta tarea. Para esto se generó un dataframe tomando sólo los datos correspondientes a las letras mencionadas y se los separó en un conjunto de datos de desarrollo (o entrenamiento) y otro de validación (o held-out). Para reducir el tiempo de ejecución de los experimentos, se tomaron solo los atributos (píxeles de la imagen) considerados más relevantes.
+Se cuenta con un modelo de árbol de decisión tal que, dada una imagen, predice a cuál de las vocales ('A', 'E', 'I', 'O', 'U') corresponde. El objetivo de los experimentos descriptos a continuación es seleccionar el mejor modelo que cumpla esta tarea. Para esto se generó un dataframe tomando sólo los datos correspondientes a las letras mencionadas y se los separó en un conjunto de datos de desarrollo (entrenamiento) y otro de validación (held-out). Para reducir el tiempo de ejecución de los experimentos, se tomaron solo los atributos (píxeles de la imagen) considerados más relevantes.
 
 \begin{itemize}
 	\item[]
 		\textbf{Experimento 1: Ajuste de un modelo de Árbol de Decisión con distintas profundidades}
 
-En este experimento se ajustó un modelo DecisionTreeClassifier variando la profundidad máxima del árbol (max\_depth) desde 1 hasta 21 con incrementos de 2. Se midió la performance del modelo en el conjunto de datos de desarrollo.
+En este experimento se ajustó un modelo DecisionTreeClassifier variando la profundidad máxima del árbol (max\_depth) desde 1 hasta 21 con incrementos de 2. Se midió la performance del modelo en el conjunto de datos de desarrollo (X\_train).
 
 \begin{figure}[H]
 	\centering
@@ -127,26 +127,53 @@ Los resultados de este experimento, tal como se ve en la figura \ref{fig:3b}, mo
  
 Con este experimento se busca encontrar la mejor configuración de hiperparámetros para el modelo. 
 
-A partir del experimento anterior se pudo intuir que para encontrar la profundidad más adecuada, se podían descartar los valores muy bajos (1-6) para evitar el subajuste, y los demasiados altos (mayores a 14) para el sobreajuste. Por esto se optó por variar el hiperparámetro max\_depth entre profundidades intermedias. 
-Al mismo tiempo, se buscó variar el hiperparámetro criterion para obtener la combinación óptima entre profundidad y criterio. 
+A partir del experimento anterior se pudo intuir que para encontrar la profundidad más adecuada, se podían descartar los valores muy bajos (1-6) para evitar el subajuste, y los demasiados altos (mayores a 14) para el sobreajuste. Por esto se optó por variar el hiperparámetro \textit{max\_depth} entre profundidades intermedias. 
+Al mismo tiempo, se buscó variar el hiperparámetro \textit{criterion} para obtener la combinación óptima entre profundidad y criterio. 
 
-Se utilizó validación cruzada con KFold (n\_splits=10, shuffle=True, random\_state=1) para evaluar el rendimiento de los modelos DecisionTreeClassifier con diferentes profundidades máximas del árbol (7 a 14) y criterios de elección de atributos (gini y entropy). 
+Se utilizó validación cruzada con KFold (n\_splits=10, shuffle=True, random\_state=1) para evaluar el rendimiento de los modelos DecisionTreeClassifier, en el conjunto de datos de desarrollo (X\_train), con diferentes profundidades máximas del árbol (7 a 14) y criterios de elección de atributos (Gini y Entropy). Una vez obtenidos los distintos valores de performance, separados en datos de entrenamiento y test, por cada \textit{max\_depth} y a su vez, divididos por \textit{criterion}, se tomó el promedio de los scores de performance, resultando en el siguiente gráfico: 
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{figuras/3c_entropy10.png}
-	\caption{Performance vs profundidad del modelo de árbol de decisión}
+	\includegraphics[scale=0.6]{figuras/3c.png}
+	\caption{Performance vs profundidad del modelo de árbol de decisión para criterios Gini y Entropy separados en datos de Train y Test}
 	\label{fig:3c}
 \end{figure}
 
-%Como se puede observar en la figura \ref{fig:3c}, 
+Como se puede observar en la figura \ref{fig:3c}, los valores de performance en los datos de entrenamiento (Train-gini, Train-entropy) se comportan de forma similar a lo visto en el Experimiento 1, aumentando la precisión del modelo a mayor profundidad del árbol. 
+El comportamiento con los datos de test (Test-gini, Test-entropy), indica que la mayor precisión se obtiene con \textit{max\_depth} = 9. 
+Con respecto al criterio de elección de atributos, en ambos conjuntos de datos, el más indicado parece ser \textit{criterion} = Entropy.
 
+Según este experimento, la mejor combinación de hiperparámetros es con \textit{max\_depth} = 9 y \textit{criterion} = Entropy, obteniendo un promedio de performance de 0.914375.
+
+	\item[]
+		\textbf{Experimento 3: Entrenamiento y análisis de performance con el mejor modelo}
+
+En el Experimiento 2 se determinó que la mejor configuración de hiperparámetros para el modelo es con \textit{max\_depth} = 9 y \textit{criterion} = Entropy. 
+Se entrenó entonces a este modelo con todo el conjunto de datos de desarrollo (X\_train) y se lo utilizó para predecir las clases en el conjunto held-out (X\_test). 
+
+Los resultados obtenidos fueron los siguientes:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ll}
+        \hline
+        Métrica    & Valor  \\
+        \hline
+        Accuracy  & 0.9217 \\
+        Precision & 0.9217 \\
+        Recall    & 0.9217 \\
+        F1        & 0.9217 \\
+        \hline
+    \end{tabular}
+    \caption{Resultados de las métricas de rendimiento del mejor modelo en el conjunto de validación (held-out)}
+    \label{tab:resultados}
+\end{table}
 
 \end{itemize}
 
-
-
 \section{Conclusiones}
+
+A partir de los experimentos realizados, se pueden extraer las siguientes conclusiones:
 
 
 
