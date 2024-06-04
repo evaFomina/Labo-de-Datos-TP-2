@@ -109,7 +109,7 @@ Se cuenta con un modelo de árbol de decisión tal que, dada una imagen, predice
 
 \begin{itemize}
 	\item[]
-		\textbf{Experimento 1: Ajuste de un modelo de Árbol de Decisión con distintas profundidades}
+	\textbf{Experimento 1: Ajuste de un modelo de Árbol de Decisión con distintas profundidades}
 
 En este experimento se ajustó un modelo DecisionTreeClassifier variando la profundidad máxima del árbol (max\_depth) desde 1 hasta 21 con incrementos de 2. Se midió la performance del modelo en el conjunto de datos de desarrollo (X\_train).
 
@@ -123,9 +123,9 @@ En este experimento se ajustó un modelo DecisionTreeClassifier variando la prof
 Los resultados de este experimento, tal como se ve en la figura \ref{fig:3b}, mostraron que la precisión del modelo aumenta con la profundidad del árbol, lo cual es esperado. Sin embargo, es importante notar que profundidades mayores pueden llevar a sobreajuste (overfitting), donde el modelo aprende demasiado bien los datos de entrenamiento y pierde capacidad de generalización. 
 
 	\item[]
-		\textbf{Experimento 2: Validación Cruzada con K-Fold }
+	\textbf{Experimento 2: Validación Cruzada con K-Fold }
  
-Con este experimento se busca encontrar la mejor configuración de hiperparámetros para el modelo. 
+Con este experimento se buscó encontrar la mejor configuración de hiperparámetros para el modelo. 
 
 A partir del experimento anterior se pudo intuir que para encontrar la profundidad más adecuada, se podían descartar los valores muy bajos (1-6) para evitar el subajuste, y los demasiados altos (mayores a 14) para el sobreajuste. Por esto se optó por variar el hiperparámetro \textit{max\_depth} entre profundidades intermedias. 
 Al mismo tiempo, se buscó variar el hiperparámetro \textit{criterion} para obtener la combinación óptima entre profundidad y criterio. 
@@ -140,18 +140,35 @@ Se utilizó validación cruzada con KFold (n\_splits=10, shuffle=True, random\_s
 \end{figure}
 
 Como se puede observar en la figura \ref{fig:3c}, los valores de performance en los datos de entrenamiento (Train-gini, Train-entropy) se comportan de forma similar a lo visto en el Experimiento 1, aumentando la precisión del modelo a mayor profundidad del árbol. 
-El comportamiento con los datos de test (Test-gini, Test-entropy), indica que la mayor precisión se obtiene con \textit{max\_depth} = 9. 
+El comportamiento con los datos de test (Test-gini, Test-entropy), indica que la mayor precisión se obtiene con \textit{max\_depth} = 9. Luego de este punto la precisión empieza a disminuir lentamente. 
 Con respecto al criterio de elección de atributos, en ambos conjuntos de datos, el más indicado parece ser \textit{criterion} = Entropy.
-
-Según este experimento, la mejor combinación de hiperparámetros es con \textit{max\_depth} = 9 y \textit{criterion} = Entropy, obteniendo un promedio de performance de 0.914375.
+		
+Según este experimento, la mejor combinación de hiperparámetros es con \textit{max\_depth} = 9 y \textit{criterion} = Entropy, obteniendo un promedio de performance de 0.9144.
 
 	\item[]
-		\textbf{Experimento 3: Entrenamiento y análisis de performance con el mejor modelo}
+	\textbf{Experimento 3: Entrenamiento y análisis de performance con el mejor modelo}
+	
+En el Experimento 2 se determinó que la mejor configuración de hiperparámetros para el modelo es con \textit{max\_depth} = 9 y \textit{criterion} = Entropy. 
+Se entrenó entonces a este modelo con todo el conjunto de datos de desarrollo (\texttt{X\_train}) y se lo utilizó para predecir las clases en el conjunto held-out (\texttt{X\_test}). 
 
-En el Experimiento 2 se determinó que la mejor configuración de hiperparámetros para el modelo es con \textit{max\_depth} = 9 y \textit{criterion} = Entropy. 
-Se entrenó entonces a este modelo con todo el conjunto de datos de desarrollo (X\_train) y se lo utilizó para predecir las clases en el conjunto held-out (X\_test). 
+A continuación, se muestra la matriz de confusión obtenida:
 
-Los resultados obtenidos fueron los siguientes:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c|ccccc}
+        & A & E & I & O & U \\
+        \hline
+        A & 428 & 15 & 8  & 16 & 13 \\
+        E & 22  & 433 & 5  & 11 & 9  \\
+        I & 3   & 9   & 467 & 0  & 1  \\
+        O & 5   & 4   & 0   & 459 & 12 \\
+        U & 22  & 6   & 3   & 24 & 425 \\
+    \end{tabular}
+    \caption{Matriz de confusión del mejor modelo en el conjunto de validación (held-out)}
+    \label{tab:matriz_confusion}
+\end{table}
+
+Los resultados obtenidos al evaluar el modelo utilizando métricas de performance fueron los siguientes:
 
 \begin{table}[H]
     \centering
@@ -165,16 +182,42 @@ Los resultados obtenidos fueron los siguientes:
         F1        & 0.9217 \\
         \hline
     \end{tabular}
-    \caption{Resultados de las métricas de rendimiento del mejor modelo en el conjunto de validación (held-out)}
+    \caption{Resultados de las métricas de performance del mejor modelo en el conjunto de validación (held-out)}
     \label{tab:resultados}
 \end{table}
 
 \end{itemize}
 
+
 \section{Conclusiones}
 
 A partir de los experimentos realizados, se pueden extraer las siguientes conclusiones:
 
+\begin{itemize}
+	
+	\item
+		Importancia de la profundidad del árbol (\textit{max\_depth}):
+
+		Los experimentos demostraron que aumentar la profundidad del árbol mejora la precisión hasta cierto punto. Sin embargo, profundidades excesivas pueden llevar a sobreajuste, reduciendo la capacidad del modelo para generalizar a nuevos datos.
+
+	\item
+		Selección del criterio de elección de atributos (\textit{criterion}):
+
+		Se observó que el criterio de Entropy superó ligeramente al criterio de Gini en términos de performance, lo cual fue evidente tanto en el conjunto de entrenamiento como en el conjunto de validación.
+
+	\item
+		Validación cruzada para elección de hiperparámetros:
+
+		La utilización de validación cruzada con \textit{k-fold} permitió identificar la configuración más adecuada de hiperparámetros que balancea adecuadamente entre precisión y la capacidad de generalización del modelo.  
+		La técnica \textit{k-fold} demostró ser una herramienta valiosa para la selección de hiperparámetros.
+
+	\item
+		Performance del modelo para clasificación multiclase:
+
+		El modelo de árbol de decisión con una profundidad máxima \textit{max\_depth} = 9 y \textit{criterion} = Entropy presentó la mejor configuración de hiperparámetros, logrando un rendimiento promedio de 0.9144 en el conjunto de desarrollo.
+		En el conjunto de validación (held-out), este modelo logró un Accuracy, Precision, Recall y F1-Score de 0.9217, indicando una alta capacidad del modelo para generalizar y predecir correctamente las clases de vocales. 
+
+\end{itemize}
 
 
 \end{document}
